@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import os
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -10,22 +11,23 @@ import requests
 from bs4 import BeautifulSoup
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
 
 # =========================
 # إعدادات عامة
 # =========================
 
 BASE_DIR = Path(__file__).resolve().parent
-EXPORTS_DIR = BASE_DIR / "exports"
+
+# نظام ملفات Vercel للقراءة فقط ما عدا /tmp، فنستخدم نفس متغير البيئة
+# AUDITFLOW_DATA_ROOT المستخدم في app/main.py لتحديد مسار قابل للكتابة
+# وقت التشغيل بدل الكتابة داخل مجلد الحزمة نفسه (كان يفشل بـ
+# "Read-only file system" على Vercel رغم أنه يعمل بشكل طبيعي على Render).
+_data_root = (os.getenv("AUDITFLOW_DATA_ROOT") or "").strip()
+_RUNTIME_DIR = (Path(_data_root) / "brand_scan_app") if _data_root else BASE_DIR
+EXPORTS_DIR = _RUNTIME_DIR / "exports"
 EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(title="مستورد الإطارات - Brand Deep Scan")
-
-# لو حاب تضيف static لاحقًا
-static_dir = BASE_DIR / "static"
-static_dir.mkdir(exist_ok=True)
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # =========================
 # إعدادات المواقع
@@ -471,7 +473,7 @@ DASHBOARD_HTML = """
       <div class="header-row">
         <div>
           <h2>استيراد المنتجات</h2>
-          <div class="muted">اختر الموقع وطريقة السحب، ثم ابدأ الاستيراد.</div>
+          <div class="muted">اختر الموقع وطريقة السحب, ثم ابدأ الاستيراد.</div>
         </div>
         <div class="pill">
           <span class="pill-dot"></span>
@@ -500,7 +502,7 @@ DASHBOARD_HTML = """
           <input id="brand" placeholder="مثال: Accelera" />
         </div>
         <div class="field">
-          <label>رابط التصنيف (لو اخترت وضع Category)</label>
+          <label>رابط التصنيف (لو اختر وضع Category)</label>
           <input id="category_url" placeholder="https://example.com/shop/accelera/" />
         </div>
       </div>
