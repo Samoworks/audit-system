@@ -1,0 +1,1126 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("auditflow-theme");
+          var d = t === "light" ? false : true;
+          document.documentElement.classList.toggle("dark", d);
+        } catch (e) {
+          document.documentElement.classList.add("dark");
+        }
+      })();
+    </script>
+    <title>المالية | OptimalSuite AI</title>
+    <link rel="icon" href="/static/favicon.svg?v=9" type="image/svg+xml" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/tailwind.css?v=9" />
+    <link rel="stylesheet" href="/static/dark.css?v=9" />
+    <style>
+      body { font-family: "IBM Plex Sans Arabic", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+
+      /* ============================================================
+         لوحة التحكم الرئيسية الجديدة (op-dashboard) — هوية بصرية
+         فخمة بلونين (ذهبي ثابت + كحلي في الليلي / كريمي في النهاري)،
+         مستقلة تمامًا عن صفحات مطابقة الفروع ومطابقة الشركات القائمة.
+         مقيّدة بالكامل بالمحدد body.op-dashboard فلا تؤثر على أي صفحة
+         أخرى في الموقع.
+         ============================================================ */
+      body.op-dashboard {
+        --gold: #c9a24d;
+        --gold-soft: #b8863a;
+        --gold-dim: rgba(180, 140, 60, 0.35);
+        --bg-page: #f6f1e4;
+        --bg-1: #ffffff;
+        --bg-2: #fdf9ef;
+        --text-heading: #201a0c;
+        --text-body: #55503f;
+        --text-muted: #8a7f63;
+        --surface-soft: rgba(180, 140, 60, 0.07);
+        --input-bg: #ffffff;
+        --input-border: rgba(180, 140, 60, 0.4);
+        --input-text: #201a0c;
+        background: var(--bg-page) !important;
+        color: var(--text-body);
+      }
+      html.dark body.op-dashboard {
+        --gold: #c9a24d;
+        --gold-soft: #e8cd85;
+        --gold-dim: rgba(201, 164, 77, 0.32);
+        --bg-page: #070b16;
+        --bg-1: #131b30;
+        --bg-2: #0d1424;
+        --text-heading: #f4e9cf;
+        --text-body: #c7cede;
+        --text-muted: #8a93a8;
+        --surface-soft: rgba(255, 255, 255, 0.025);
+        --input-bg: #070b16;
+        --input-border: rgba(201, 164, 77, 0.28);
+        --input-text: #f1e9d2;
+      }
+
+      /* --- الهيكل: نعتمد على ترتيب flex الموجود أصلًا في .erp-shell/.erp-content
+         (وليس position:fixed) حتى يظهر الشريط الجانبي يمين الصفحة تلقائيًا مع RTL،
+         بنفس طريقة عمل .erp-sidebar الأصلية في باقي الموقع. --- */
+      body.op-dashboard.erp-shell { align-items: stretch; }
+      body.op-dashboard .op-sidebar {
+        display: none;
+        width: 84px;
+        flex-shrink: 0;
+        background: rgba(9, 13, 24, 0.04);
+        border-inline-end: 1px solid var(--gold-dim);
+        flex-direction: column;
+        align-items: center;
+        padding: 1.25rem 0;
+        gap: 0.5rem;
+      }
+      html.dark body.op-dashboard .op-sidebar { background: rgba(9, 13, 24, 0.95); }
+      @media (min-width: 768px) {
+        body.op-dashboard .op-sidebar { display: flex; }
+      }
+      body.op-dashboard .op-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 100vh;
+      }
+      body.op-dashboard .op-brand {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, var(--gold), #8a6a1f);
+        margin-bottom: 1.25rem;
+        box-shadow: 0 8px 20px rgba(180, 140, 60, 0.25);
+        flex-shrink: 0;
+      }
+      body.op-dashboard .op-sidebar-nav { flex: 1; overflow-y: auto; }
+      body.op-dashboard .op-side-link {
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-muted);
+        transition: all 0.15s ease;
+        flex-shrink: 0;
+      }
+      body.op-dashboard .op-side-link:hover {
+        background: var(--surface-soft);
+        color: var(--gold-soft);
+      }
+      body.op-dashboard .op-side-link.nav-link--active {
+        background: linear-gradient(135deg, rgba(180, 140, 60, 0.28), rgba(180, 140, 60, 0.08));
+        color: var(--gold-soft);
+        box-shadow: 0 0 18px rgba(180, 140, 60, 0.2);
+      }
+      body.op-dashboard .op-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.75rem;
+        background: var(--bg-1);
+        border-bottom: 1px solid var(--gold-dim);
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        backdrop-filter: blur(6px);
+      }
+      body.op-dashboard .op-profile { display: flex; align-items: center; gap: 0.6rem; }
+      body.op-dashboard .op-avatar {
+        width: 42px; height: 42px; border-radius: 50%;
+        background: linear-gradient(135deg, var(--gold-soft), var(--gold));
+        color: #1a1406; display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 1.05rem; flex-shrink: 0;
+      }
+      body.op-dashboard .op-profile-name { color: var(--text-heading); font-weight: 800; font-size: 0.9rem; line-height: 1.3; }
+      body.op-dashboard .op-profile-role { color: var(--text-muted); font-size: 0.72rem; font-weight: 700; }
+      body.op-dashboard .op-icon-btn {
+        width: 40px; height: 40px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--surface-soft);
+        border: 1px solid var(--gold-dim);
+        color: var(--text-body);
+        cursor: pointer;
+      }
+      body.op-dashboard .op-icon-btn:hover { background: rgba(180, 140, 60, 0.14); color: var(--gold-soft); }
+      body.op-dashboard .op-main { padding: 2rem 1.75rem 3rem; max-width: 1180px; margin: 0 auto; width: 100%; }
+      body.op-dashboard .op-hero { text-align: center; margin-bottom: 2.25rem; }
+      body.op-dashboard .op-hero-eyebrow { color: var(--text-muted); font-weight: 700; font-size: 0.95rem; }
+      body.op-dashboard .op-hero h1 { font-size: 2.2rem; font-weight: 800; color: var(--text-heading); margin: 0.35rem 0; }
+      body.op-dashboard .op-hero h1 b { color: var(--gold-soft); font-weight: 800; }
+      body.op-dashboard .op-hero p { color: var(--text-body); font-weight: 700; }
+      body.op-dashboard .op-hero-rule { width: 70px; height: 3px; background: linear-gradient(90deg, transparent, var(--gold), transparent); margin: 0.9rem auto 0; border-radius: 3px; }
+      body.op-dashboard .op-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+      @media (max-width: 900px) { body.op-dashboard .op-stats { grid-template-columns: repeat(2, 1fr); } }
+      body.op-dashboard .op-stat-card {
+        background: linear-gradient(175deg, var(--bg-2), var(--bg-1));
+        border: 1px solid var(--gold-dim);
+        border-radius: 16px; padding: 1.1rem; text-align: center;
+      }
+      body.op-dashboard .op-stat-icon { font-size: 1.4rem; margin-bottom: 0.4rem; }
+      body.op-dashboard .op-stat-value { font-size: 1.3rem; font-weight: 800; color: var(--gold-soft); }
+      body.op-dashboard .op-stat-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; margin-top: 0.15rem; }
+      body.op-dashboard .op-modules-panel {
+        background: linear-gradient(175deg, var(--bg-2), var(--bg-1));
+        border: 1px solid var(--gold-dim);
+        border-radius: 20px; padding: 1.5rem; position: relative; overflow: hidden;
+      }
+      body.op-dashboard .op-modules-panel::before {
+        content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
+        background: linear-gradient(90deg, transparent, var(--gold-soft), var(--gold), var(--gold-soft), transparent);
+        opacity: 0.9;
+      }
+      body.op-dashboard .op-modules-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem; }
+      body.op-dashboard .op-modules-head h2 { color: var(--text-heading); font-weight: 800; font-size: 1.1rem; }
+      body.op-dashboard .op-modules-head span { color: var(--text-muted); font-size: 0.8rem; font-weight: 700; }
+      body.op-dashboard .op-modules-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+      @media (max-width: 1024px) { body.op-dashboard .op-modules-grid { grid-template-columns: repeat(2, 1fr); } }
+      @media (max-width: 600px) { body.op-dashboard .op-modules-grid { grid-template-columns: 1fr; } }
+      body.op-dashboard .op-module-card {
+        background: var(--surface-soft);
+        border: 1px solid var(--gold-dim);
+        border-radius: 16px; padding: 1.25rem 1rem; text-align: center;
+        display: flex; flex-direction: column; align-items: center; transition: all 0.15s ease;
+      }
+      body.op-dashboard .op-module-card:hover { border-color: var(--gold); background: rgba(180, 140, 60, 0.1); transform: translateY(-2px); }
+      body.op-dashboard .op-module-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 0.85rem; font-size: 1.5rem; }
+      body.op-dashboard .op-module-title { color: var(--text-heading); font-weight: 800; font-size: 0.95rem; margin-bottom: 0.35rem; }
+      body.op-dashboard .op-module-desc { color: var(--text-muted); font-size: 0.75rem; font-weight: 700; line-height: 1.5; min-height: 2.6em; margin-bottom: 0.9rem; }
+      body.op-dashboard .op-module-btn {
+        display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.5rem 1.1rem; border-radius: 10px;
+        background: linear-gradient(270deg, #8a6a1f 0%, var(--gold) 45%, var(--gold-soft) 100%);
+        color: #1a1406; font-weight: 800; font-size: 0.8rem; box-shadow: 0 6px 16px rgba(180, 140, 60, 0.25);
+      }
+      body.op-dashboard .op-module-btn:hover { filter: brightness(1.08); }
+      body.op-dashboard .op-support-card {
+        margin-top: auto; width: 60px; border-radius: 14px;
+        background: var(--surface-soft); border: 1px solid var(--gold-dim);
+        display: flex; flex-direction: column; align-items: center; padding: 0.7rem 0.3rem; gap: 0.4rem; text-align: center;
+        flex-shrink: 0;
+      }
+      body.op-dashboard .op-shell-card {
+        background: linear-gradient(175deg, var(--bg-2), var(--bg-1));
+        border: 1px solid var(--gold-dim); border-radius: 20px; padding: 3.5rem 1.5rem; text-align: center;
+      }
+      body.op-dashboard .op-shell-icon { font-size: 3rem; margin-bottom: 1rem; }
+      body.op-dashboard .op-shell-card h1 { color: var(--text-heading); font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; }
+      body.op-dashboard .op-shell-badge {
+        display: inline-block; padding: 0.3rem 0.9rem; border-radius: 999px;
+        background: rgba(180, 140, 60, 0.15); color: var(--gold-soft); font-size: 0.75rem; font-weight: 800; margin-bottom: 1rem;
+      }
+      body.op-dashboard .op-shell-card p { color: var(--text-muted); font-weight: 700; max-width: 480px; margin: 0 auto 1.5rem; line-height: 1.7; }
+
+      /* --- إعادة تلوين محتوى منقول من صفحات قديمة (مثل الإعدادات) بنفس أسلوب Tailwind
+         القديم، لتتوافق مع الهوية الجديدة تلقائيًا في الوضعين الليلي والنهاري --- */
+      body.op-dashboard .op-main h1,
+      body.op-dashboard .op-main h2,
+      body.op-dashboard .op-main h3 { color: var(--text-heading) !important; }
+      body.op-dashboard .op-main p,
+      body.op-dashboard .op-main label,
+      body.op-dashboard .op-main span,
+      body.op-dashboard .op-main div,
+      body.op-dashboard .op-main td,
+      body.op-dashboard .op-main th { color: var(--text-body); }
+      body.op-dashboard .op-main .rounded-3xl,
+      body.op-dashboard .op-main .rounded-2xl.border {
+        background: linear-gradient(175deg, var(--bg-2), var(--bg-1)) !important;
+        border-color: var(--gold-dim) !important;
+      }
+      body.op-dashboard .op-main .bg-slate-50,
+      body.op-dashboard .op-main .bg-slate-800\/40,
+      body.op-dashboard .op-main .bg-slate-800\/80 {
+        background: var(--surface-soft) !important;
+        border-color: var(--gold-dim) !important;
+      }
+      body.op-dashboard .op-main input,
+      body.op-dashboard .op-main select,
+      body.op-dashboard .op-main textarea {
+        background: var(--input-bg) !important;
+        border-color: var(--input-border) !important;
+        color: var(--input-text) !important;
+      }
+      body.op-dashboard .op-main input::placeholder,
+      body.op-dashboard .op-main textarea::placeholder { color: var(--text-muted) !important; opacity: 0.8; }
+      body.op-dashboard .op-main button {
+        border-color: var(--gold-dim);
+      }
+      body.op-dashboard .op-main button.bg-slate-900,
+      body.op-dashboard .op-main button.bg-indigo-600 {
+        background: linear-gradient(270deg, #8a6a1f 0%, var(--gold) 45%, var(--gold-soft) 100%) !important;
+        color: #1a1406 !important;
+        border: none !important;
+      }
+      body.op-dashboard .op-main button.bg-emerald-600 {
+        background: #1f9d63 !important;
+        color: #fff !important;
+        border: none !important;
+      }
+      body.op-dashboard .op-main table thead { background: var(--surface-soft) !important; }
+      body.op-dashboard .op-main table tr { border-color: var(--gold-dim) !important; }
+      body.op-dashboard .op-main .text-emerald-600,
+      body.op-dashboard .op-main .text-emerald-700 { color: #1f9d63 !important; }
+      body.op-dashboard .op-main .text-amber-600 { color: #b8863a !important; }
+      body.op-dashboard .op-main .text-rose-600 { color: #c0435a !important; }
+      body.op-dashboard .op-main details summary { color: var(--text-heading); }
+
+    
+
+    
+      body.op-dashboard .op-tool-modal-overlay {
+        position: fixed; inset: 0; background: rgba(20, 16, 6, 0.55); backdrop-filter: blur(2px);
+        display: flex; align-items: center; justify-content: center; z-index: 200; padding: 1rem;
+      }
+      body.op-dashboard .op-tool-modal {
+        background: linear-gradient(175deg, var(--bg-2), var(--bg-1)); border: 1px solid var(--gold-dim);
+        border-radius: 20px; padding: 1.5rem; width: 100%; max-width: 520px; max-height: 88vh; overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      }
+      body.op-dashboard .op-tool-modal-head { display: flex; align-items: flex-start; gap: 0.85rem; margin-bottom: 1.1rem; }
+      body.op-dashboard .op-tool-modal-head h3 { color: var(--text-heading); font-weight: 800; font-size: 1.05rem; margin-bottom: 0.2rem; }
+      body.op-dashboard .op-tool-modal-head p { color: var(--text-muted); font-size: 0.78rem; font-weight: 700; margin: 0; }
+      body.op-dashboard .op-tool-modal-head button {
+        margin-inline-start: auto; background: transparent; border: none; color: var(--text-muted);
+        font-size: 1.1rem; cursor: pointer; line-height: 1;
+      }
+      body.op-dashboard .op-tool-modal-head button:hover { color: var(--text-heading); }
+      body.op-dashboard .op-tool-field { margin-bottom: 0.9rem; }
+      body.op-dashboard .op-tool-field label {
+        display: block; color: var(--text-heading); font-weight: 800; font-size: 0.8rem; margin-bottom: 0.35rem;
+      }
+      body.op-dashboard .op-tool-field input[type="text"],
+      body.op-dashboard .op-tool-field input[type="number"],
+      body.op-dashboard .op-tool-field input[type="date"],
+      body.op-dashboard .op-tool-field textarea,
+      body.op-dashboard .op-tool-field select {
+        width: 100%; padding: 0.6rem 0.75rem; border-radius: 10px; border: 1px solid var(--input-border);
+        background: var(--input-bg); color: var(--input-text); font-size: 0.85rem; font-weight: 600; font-family: inherit;
+      }
+      body.op-dashboard .op-tool-modal-result {
+        margin-top: 0.5rem; margin-bottom: 1rem; padding: 0.85rem; border-radius: 12px;
+        background: var(--surface-soft); border: 1px solid var(--gold-dim); font-size: 0.8rem;
+        color: var(--text-body); white-space: pre-wrap; word-break: break-word; max-height: 220px; overflow-y: auto;
+      }
+      body.op-dashboard .op-tool-modal-actions { display: flex; gap: 0.6rem; justify-content: flex-end; }
+      body.op-dashboard .op-tool-modal-actions button { border: none; cursor: pointer; font-family: inherit; }
+      body.op-dashboard .op-tool-btn-secondary {
+        padding: 0.55rem 1rem; border-radius: 10px; background: var(--surface-soft);
+        border: 1px solid var(--gold-dim) !important; color: var(--text-body); font-weight: 800; font-size: 0.8rem;
+      }
+      body.op-dashboard .op-admin-table thead {
+        background: linear-gradient(90deg, rgba(180, 140, 60, 0.16), rgba(180, 140, 60, 0.04));
+      }
+      body.op-dashboard .op-admin-table th {
+        color: var(--gold-soft) !important; font-weight: 800; font-size: 0.72rem;
+        text-transform: uppercase; letter-spacing: 0.02em; white-space: nowrap;
+      }
+      body.op-dashboard .op-admin-table td { font-size: 0.82rem; }
+      body.op-dashboard .op-admin-table tbody tr { transition: background 0.15s ease; }
+      body.op-dashboard .op-admin-table tbody tr:hover { background: var(--surface-soft); }
+      body.op-dashboard .op-admin-table td, body.op-dashboard .op-admin-table th { border-color: var(--gold-dim) !important; }
+      body.op-dashboard .op-btn-chip {
+        border: 1px solid var(--gold-dim); background: var(--bg-2); color: var(--text-heading);
+        border-radius: 999px; padding: 6px 14px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.15s ease;
+      }
+      body.op-dashboard .op-btn-chip:hover { filter: brightness(1.05); }
+      body.op-dashboard .op-btn-chip--danger { color: #dc2626; border-color: rgba(220, 38, 38, 0.35); }
+      body.op-dashboard .op-btn-chip--danger:hover { background: rgba(220, 38, 38, 0.08); }
+      body.op-dashboard .op-btn-chip--gold { background: var(--gold); color: #1a1200 !important; border-color: var(--gold); }
+      body.op-dashboard .simple-inv-oos-badge {
+        display: inline-block; background: rgba(220, 38, 38, 0.12); color: #dc2626; font-weight: 800;
+        font-size: 0.68rem; padding: 2px 8px; border-radius: 999px; margin-inline-start: 6px;
+      }
+
+      @media (max-width: 900px) {
+        body.op-dashboard .simple-inv-grid-2col { grid-template-columns: 1fr !important; }
+        body.op-dashboard .op-stats { grid-template-columns: repeat(2, 1fr) !important; }
+      }
+
+</style>
+  </head>
+  <body class="op-dashboard erp-shell min-h-screen" data-report-type="dashboard">
+    <div id="toast" class="hidden toast-host text-white px-4 py-3 rounded-xl font-extrabold text-sm"></div>
+
+    <aside class="op-sidebar" aria-label="القائمة الرئيسية">
+      <a href="/" class="op-brand" aria-label="OptimalSuite AI">
+        <svg width="22" height="22" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M16 3l4 4-9 9-4-4 9-9zM7 16l4 4-4 4-4-4 4-4zM21 16l4 4-9 9-4-4 9-9z" fill="#1a1406"/>
+        </svg>
+      </a>
+      <nav class="op-sidebar-nav erp-sidebar__nav flex flex-col items-center gap-2" aria-label="تنقل">
+        <a href="/" class="op-side-link nav-link nav-link--idle" data-nav="op-home" title="الرئيسية"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg></a>
+        <a href="/matching" class="op-side-link nav-link nav-link--idle" data-nav="op-matching" title="مطابقة الحسابات"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a4 4 0 115.657 0l-.879.878a2 2 0 00-.586 1.415V19a1 1 0 01-1 1h-2a1 1 0 01-1-1v-.464a2 2 0 00-.586-1.415l-.879-.878z"/></svg></a>
+        <a href="/branches-management" class="op-side-link nav-link nav-link--idle" data-nav="op-branches" title="إدارة الفروع"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21V7a2 2 0 012-2h6a2 2 0 012 2v14M13 21V11a2 2 0 012-2h4a2 2 0 012 2v10M7 9h2M7 13h2M7 17h2"/></svg></a>
+        <a href="/hr" class="op-side-link nav-link nav-link--idle" data-nav="op-hr" title="الموارد البشرية"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"/></svg></a>
+        <a href="/finance" class="op-side-link nav-link nav-link--idle" data-nav="op-finance" title="مركز الأدوات الذكية"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 8h6m-5 4h4m-6 4h8M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></a>
+        <a href="/inventory-management" class="op-side-link nav-link nav-link--active" data-nav="op-inventory" title="المالية"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></a>        <a href="/suppliers" class="op-side-link nav-link nav-link--idle" data-nav="op-suppliers" title="إدارة المستندات"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13h1l2 7h11l2-7h1M8 13V7a4 4 0 118 0v6m-9 0h10"/></svg></a>
+        <a href="/analytics" class="op-side-link nav-link nav-link--idle" data-nav="op-analytics" title="التقارير والتحليلات"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg></a>
+        <a href="/convert" class="op-side-link nav-link nav-link--idle" data-nav="op-convert" title="تحويل الملفات"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4M16 17H4m0 0l4 4m-4-4l4-4"/></svg></a>
+        <a href="/admin" class="op-side-link nav-link nav-link--idle" data-nav="op-admin" data-admin-only="1" title="لوحة المدير"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg></a>
+        <a href="/settings" class="op-side-link nav-link nav-link--idle" data-nav="op-settings" title="الإعدادات"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 001.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-1.065 2.572c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 00-1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></a>
+        <a href="#" data-nav="importer" style="display:none" aria-hidden="true" tabindex="-1"></a>
+        <a href="#" data-nav="companies" style="display:none" aria-hidden="true" tabindex="-1"></a>
+        <a href="#" data-nav="terms" style="display:none" aria-hidden="true" tabindex="-1"></a>
+        <a href="#" data-nav="privacy" style="display:none" aria-hidden="true" tabindex="-1"></a>
+        <a href="#" data-nav="agreement" style="display:none" aria-hidden="true" tabindex="-1"></a>
+      </nav>
+      <div class="op-support-card">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--gold-soft)"><path stroke-linecap="round" stroke-linejoin="round" d="M18 10a6 6 0 10-12 0v2a2 2 0 00-2 2v2a2 2 0 002 2h1v-6a5 5 0 0110 0v6h1a2 2 0 002-2v-2a2 2 0 00-2-2v-2z"/></svg>
+        <span style="font-size:0.62rem;font-weight:800;color:var(--gold-soft);">الدعم الفني</span>
+        <a href="/contact" style="font-size:0.58rem;font-weight:800;color:var(--text-muted);">تواصل معنا</a>
+      </div>
+    </aside>
+
+    <div id="mobileNavDrawer" class="mobile-nav-drawer md:hidden" role="navigation" aria-label="قائمة الجوال">
+      <a href="/" data-nav="op-home" class="nav-link nav-link--idle">الرئيسية</a>
+        <a href="/matching" data-nav="op-matching" class="nav-link nav-link--idle">مطابقة الحسابات</a>
+        <a href="/branches-management" data-nav="op-branches" class="nav-link nav-link--idle">إدارة الفروع</a>
+        <a href="/hr" data-nav="op-hr" class="nav-link nav-link--idle">الموارد البشرية</a>
+        <a href="/finance" data-nav="op-finance" class="nav-link nav-link--idle">مركز الأدوات الذكية</a>
+        <a href="/inventory-management" data-nav="op-inventory" class="nav-link nav-link--active">المالية</a>        <a href="/suppliers" data-nav="op-suppliers" class="nav-link nav-link--idle">إدارة المستندات</a>
+        <a href="/analytics" data-nav="op-analytics" class="nav-link nav-link--idle">التقارير والتحليلات</a>
+        <a href="/convert" data-nav="op-convert" class="nav-link nav-link--idle">تحويل الملفات</a>
+        <a href="/admin" data-nav="op-admin" data-admin-only="1" class="nav-link nav-link--idle">👑 لوحة المدير</a>
+        <a href="/settings" data-nav="op-settings" class="nav-link nav-link--idle">الإعدادات</a>
+      <a href="#" data-nav="importer" style="display:none" aria-hidden="true" tabindex="-1"></a>
+        <a href="#" data-nav="companies" style="display:none" aria-hidden="true" tabindex="-1"></a>
+        <a href="#" data-nav="terms" style="display:none" aria-hidden="true" tabindex="-1"></a>
+        <a href="#" data-nav="privacy" style="display:none" aria-hidden="true" tabindex="-1"></a>
+        <a href="#" data-nav="agreement" style="display:none" aria-hidden="true" tabindex="-1"></a>
+    </div>
+
+    <div class="op-content">
+      <header class="op-topbar">
+        <button type="button" id="navMenuBtn" class="nav-toggle-btn nav-burger-only op-icon-btn" aria-controls="mobileNavDrawer" aria-expanded="false" aria-label="فتح القائمة">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/></svg>
+        </button>
+        <button type="button" id="opBackBtn" class="op-icon-btn" title="رجوع" aria-label="رجوع">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <div class="min-w-0 flex flex-col">
+          <span style="font-weight:800;color:var(--text-heading);font-size:0.85rem;">المالية</span>
+        </div>
+        <div class="flex items-center gap-3" style="margin-inline-start:auto;">
+          <div class="op-avatar" id="opAvatarInitial">؟</div>
+          <div>
+            <div class="op-profile-name" id="opProfileName">زائر</div>
+            <div class="op-profile-role" id="opProfileRole">—</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" class="op-icon-btn" title="الإشعارات" aria-label="الإشعارات">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+          </button>
+          <button type="button" id="themeToggle" class="op-icon-btn" title="الوضع الليلي/النهاري" aria-label="تبديل الوضع"></button>
+          <button type="button" id="opFullscreenBtn" class="op-icon-btn" title="ملء الشاشة" aria-label="ملء الشاشة">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V6a2 2 0 012-2h2M4 16v2a2 2 0 002 2h2m8-16h2a2 2 0 012 2v2m-4 12h2a2 2 0 002-2v-2"/></svg>
+          </button>
+          <button type="button" id="opLogoutBtn" class="op-icon-btn" title="تسجيل الخروج" aria-label="تسجيل الخروج">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m0-9H5a2 2 0 00-2 2v14a2 2 0 002 2h2"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="op-main">
+        <div class="fin-nav" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px;border-radius:14px;background:linear-gradient(90deg, rgba(180,140,60,0.14), rgba(180,140,60,0.03));border:1px solid var(--gold-dim);margin-bottom:14px;">
+          <span style="font-weight:800;color:var(--gold-soft);">💰 المالية</span>
+          <a href="/trade/items" style="padding:7px 14px;border-radius:999px;font-weight:800;font-size:0.85rem;border:1px solid var(--gold-dim);color:var(--text-heading);">📦 الأصناف</a>
+          <a href="/trade/purchases" style="padding:7px 14px;border-radius:999px;font-weight:800;font-size:0.85rem;border:1px solid var(--gold-dim);color:var(--text-heading);">📥 المشتريات</a>
+          <a href="/inventory-management" style="padding:7px 14px;border-radius:999px;font-weight:800;font-size:0.85rem;background:linear-gradient(270deg, #8a6a1f 0%, var(--gold) 45%, var(--gold-soft) 100%);color:#1a1406;border:none;">🧾 نقطة البيع</a>
+          <a href="/trade/stocktake" style="padding:7px 14px;border-radius:999px;font-weight:800;font-size:0.85rem;border:1px solid var(--gold-dim);color:var(--text-heading);">📋 الجرد</a>
+          <a href="/trade/reports" style="padding:7px 14px;border-radius:999px;font-weight:800;font-size:0.85rem;border:1px solid var(--gold-dim);color:var(--text-heading);">📊 التقارير</a>
+        </div>
+        
+        <style>
+          @media (max-width: 900px) { .dash-lists-grid { grid-template-columns: 1fr !important; } }
+          .dash-mini-row { display:flex; justify-content:space-between; gap:8px; padding:6px 8px; border-radius:8px; font-size:0.82rem; margin-bottom:4px; background:var(--surface-soft); }
+        </style>
+        <div class="op-shell-card" style="padding:1.25rem;margin-bottom:1rem;" id="finDashboard">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:1rem;flex-wrap:wrap;">
+            <h2 style="font-weight:800;color:var(--text-heading);font-size:1.05rem;">📊 نظرة عامة على المالية</h2>
+            <button type="button" id="dashRefreshBtn" class="op-icon-btn" title="تحديث">🔄</button>
+          </div>
+          <div class="op-stats" id="dashStats"></div>
+          <div class="dash-lists-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-top:1.25rem;">
+            <div>
+              <div style="font-weight:800;margin-bottom:6px;color:var(--text-heading);">⚠️ أصناف منخفضة / نافذة</div>
+              <div id="dashLowStock"></div>
+            </div>
+            <div>
+              <div style="font-weight:800;margin-bottom:6px;color:var(--text-heading);">🏆 الأكثر مبيعاً</div>
+              <div id="dashTopItems"></div>
+            </div>
+            <div>
+              <div style="font-weight:800;margin-bottom:6px;color:var(--text-heading);">🧾 آخر الفواتير</div>
+              <div id="dashLatestInvoices"></div>
+            </div>
+          </div>
+        </div>
+        <div class="op-content-panel">
+          <div class="op-hero" style="margin-bottom:1rem;">
+            <h1>🧾 <b>نقطة البيع</b></h1>
+          </div>
+
+          <div class="pos-main-grid" style="display:grid;grid-template-columns:1fr 340px;gap:1rem;align-items:start;">
+            <!-- ===================== يمين: الفاتورة ===================== -->
+            <div class="op-shell-card" style="text-align:start;padding:1.5rem;">
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.8rem;margin-bottom:1rem;">
+                <div class="op-tool-field" style="margin-bottom:0;"><label>رقم الفاتورة</label><input type="text" id="posInvoiceNo" readonly /></div>
+                <div class="op-tool-field" style="margin-bottom:0;"><label>التاريخ والوقت</label><input type="text" id="posDateTime" readonly /></div>
+                <div class="op-tool-field" style="margin-bottom:0;"><label>طريقة الدفع</label>
+                  <select id="posPaymentType">
+                    <option value="cash">نقدًا</option>
+                    <option value="card">شبكة</option>
+                    <option value="transfer">تحويل</option>
+                    <option value="credit">آجل</option>
+                  </select>
+                </div>
+                <div class="op-tool-field" style="margin-bottom:0;"><label>العميل (اختياري)</label><input type="text" id="posCustomerName" placeholder="عميل نقدي" /></div>
+              </div>
+
+              <div style="position:relative;margin-bottom:1rem;">
+                <div class="op-tool-field" style="margin-bottom:0;">
+                  <label>🔍 ابحث عن صنف بالاسم أو الكود أو الباركود</label>
+                  <input type="text" id="posItemSearch" placeholder="اكتب اسم الصنف أو الكود..." autocomplete="off" />
+                </div>
+                <div id="posItemResults" style="display:none;position:absolute;z-index:50;top:100%;right:0;left:0;margin-top:4px;max-height:260px;overflow-y:auto;background:var(--bg-1);border:1px solid var(--gold-dim);border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,0.18);"></div>
+              </div>
+
+              <div style="overflow-x:auto;">
+                <table class="op-admin-table w-full" style="width:100%;border-collapse:collapse;">
+                  <thead>
+                    <tr>
+                      <th style="padding:0.5rem;">الصنف</th>
+                      <th style="padding:0.5rem;">الكمية</th>
+                      <th style="padding:0.5rem;">سعر البيع</th>
+                      <th style="padding:0.5rem;">الخصم</th>
+                      <th style="padding:0.5rem;">الضريبة</th>
+                      <th style="padding:0.5rem;">الإجمالي</th>
+                      <th style="padding:0.5rem;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="posCartBody"></tbody>
+                </table>
+                <div id="posCartEmpty" style="text-align:center;color:var(--text-muted);font-weight:700;padding:1.5rem 0;">لم تتم إضافة أي صنف بعد — ابحث عن صنف أعلاه لإضافته للفاتورة.</div>
+              </div>
+            </div>
+
+            <!-- ===================== يسار: الملخص والأزرار ===================== -->
+            <div class="op-shell-card" style="text-align:start;padding:1.25rem;position:sticky;top:1rem;">
+              <div style="font-weight:800;color:var(--text-heading);margin-bottom:0.75rem;font-size:0.95rem;">ملخص الفاتورة</div>
+              <div style="display:flex;justify-content:space-between;padding:0.35rem 0;color:var(--text-body);font-weight:700;font-size:0.85rem;">
+                <span>الإجمالي قبل الضريبة</span><span id="posSubTotal">0.00</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:0.35rem 0;color:var(--text-body);font-weight:700;font-size:0.85rem;">
+                <span>الخصم</span><span id="posDiscTotal">0.00</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:0.35rem 0;color:var(--text-body);font-weight:700;font-size:0.85rem;">
+                <span>الضريبة</span><span id="posTaxTotal">0.00</span>
+              </div>
+              <div style="border-top:1px dashed var(--gold-dim);margin:0.6rem 0;"></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;padding:0.35rem 0;">
+                <span style="font-weight:800;color:var(--text-heading);">الإجمالي النهائي</span>
+                <span id="posGrandTotal" style="font-weight:800;color:var(--gold-soft);font-size:2rem;line-height:1;">0.00</span>
+              </div>
+
+              <div style="display:grid;gap:0.6rem;margin-top:1.25rem;">
+                <button type="button" class="op-btn-chip op-btn-chip--gold" id="posSaveBtn" style="padding:0.85rem;font-size:0.95rem;">💾 حفظ الفاتورة</button>
+                <button type="button" class="op-btn-chip" id="posPrintBtn" style="padding:0.75rem;">🖨️ طباعة</button>
+                <button type="button" class="op-btn-chip" id="posNewBtn" style="padding:0.75rem;">🆕 فاتورة جديدة</button>
+                <button type="button" class="op-btn-chip" id="posSuspendBtn" style="padding:0.75rem;">⏸️ تعليق الفاتورة</button>
+                <button type="button" class="op-btn-chip" id="posResumeBtn" style="padding:0.75rem;">↩️ استرجاع فاتورة</button>
+                <button type="button" class="op-btn-chip op-btn-chip--danger" id="posDeleteBtn" style="padding:0.75rem;">🗑️ حذف الفاتورة</button>
+                <div style="border-top:1px solid var(--gold-dim);margin:0.4rem 0;"></div>
+                <button type="button" class="op-btn-chip" id="posManageItemsBtn" style="padding:0.75rem;">📦 إدارة الأصناف</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="op-tool-modal-overlay" id="posResumeModal" style="display:none;">
+          <div class="op-tool-modal">
+            <div class="op-tool-modal-head">
+              <div>
+                <h3>الفواتير المعلقة</h3>
+                <p>اختر فاتورة معلقة لاسترجاعها ومتابعة العمل عليها</p>
+              </div>
+              <button type="button" id="posResumeModalClose">✕</button>
+            </div>
+            <div id="posResumeList"></div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+    <script src="/static/app.js?v=19"></script>
+    <script>
+      (function () {
+        var fsBtn = document.getElementById("opFullscreenBtn");
+        if (fsBtn) {
+          fsBtn.addEventListener("click", function () {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+            else document.exitFullscreen?.();
+          });
+        }
+        var backBtn = document.getElementById("opBackBtn");
+        if (backBtn) {
+          backBtn.addEventListener("click", function () {
+            if (window.history.length > 1) window.history.back();
+            else window.location.href = "/";
+          });
+        }
+        var opLogoutBtn = document.getElementById("opLogoutBtn");
+        if (opLogoutBtn) {
+          opLogoutBtn.addEventListener("click", async function () {
+            try { await apiPostJson("/auth/logout", {}); } catch (e) {}
+            window.location.href = "/login";
+          });
+        }
+        (async function () {
+          try {
+            const res = await fetch("/auth/me", { credentials: "same-origin" });
+            if (!res.ok) return;
+            const me = await res.json();
+            const nameEl = document.getElementById("opProfileName");
+            const roleEl = document.getElementById("opProfileRole");
+            const avatarEl = document.getElementById("opAvatarInitial");
+            if (me && me.username) {
+              if (nameEl) nameEl.textContent = me.username;
+              if (avatarEl) avatarEl.textContent = me.username.trim().charAt(0).toUpperCase() || "؟";
+              if (roleEl) roleEl.textContent = me.is_admin ? "مدير النظام" : (me.role_name === "admin" ? "مدير النظام" : "مستخدم النظام");
+            }
+          } catch (e) {}
+        })();
+      })();
+      
+    </script>
+  
+    <script>
+      (function () {
+        var cart = [];
+        var lastSavedSaleId = null;
+        var companyProfile = {};
+        var posSettings = { shop_name: "", currency: "SAR", print_size: "A4", thermal_header: "" };
+        var searchResults = [];
+
+        function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (m) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]; }); }
+        function round2(v) { return Math.round((Number(v) || 0) * 100) / 100; }
+        function money(v) { return round2(v).toFixed(2); }
+
+        function genInvoiceNo() {
+          var d = new Date();
+          var stamp = d.getFullYear().toString() + String(d.getMonth() + 1).padStart(2, "0") + String(d.getDate()).padStart(2, "0");
+          return "INV-" + stamp + "-" + Date.now().toString().slice(-5);
+        }
+
+        function refreshDateTime() {
+          var el = document.getElementById("posDateTime");
+          if (!el) return;
+          var d = new Date();
+          var datePart = d.toLocaleDateString("ar-SA");
+          var timePart = d.toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" });
+          el.value = datePart + " - " + timePart;
+        }
+
+        async function loadCompanyProfile() {
+          try {
+            companyProfile = await apiGet("/api/company-profile");
+          } catch (e) {
+            companyProfile = {};
+          }
+        }
+
+        async function loadPosSettings() {
+          try {
+            var d = await apiGet("/api/cashierko/settings");
+            posSettings = Object.assign({}, posSettings, d.settings || {});
+          } catch (e) {}
+        }
+
+        function lineTotal(row) {
+          return computeLine(row).total;
+        }
+
+        function computeLine(row) {
+          var price = Number(row.sale_price) || 0;
+          var qty = Number(row.qty) || 0;
+          var discount = Number(row.discount) || 0;
+          var gross = qty * price;
+          var net = Math.max(0, gross - discount);
+          var rate = row.is_taxable ? (Number(row.tax_rate) || 0) : 0;
+          if (rate > 1) rate = rate / 100;
+          var preTax = rate > 0 ? net / (1 + rate) : net;
+          var taxAmt = net - preTax;
+          return { gross: gross, net: net, preTax: preTax, tax: taxAmt, total: net };
+        }
+
+        function renderItemResults(list) {
+          var host = document.getElementById("posItemResults");
+          if (!host) return;
+          searchResults = list || [];
+          if (!searchResults.length) {
+            host.style.display = "none";
+            host.innerHTML = "";
+            return;
+          }
+          host.innerHTML = searchResults.map(function (x, i) {
+            var oos = Number(x.quantity) <= 0 ? '<span class="simple-inv-oos-badge">نفذ المخزون</span>' : "";
+            return '<div data-pick="' + i + '" style="padding:0.6rem 0.85rem;cursor:pointer;border-bottom:1px solid var(--gold-dim);display:flex;justify-content:space-between;gap:0.5rem;align-items:center;">' +
+              '<div><div style="font-weight:800;color:var(--text-heading);font-size:0.85rem;">' + esc(x.name) + oos + '</div>' +
+              '<div style="font-size:0.72rem;color:var(--text-muted);">' + esc(x.code) + ' · متاح: ' + esc(x.quantity) + '</div></div>' +
+              '<div style="font-weight:800;color:var(--gold-soft);">' + money(x.default_sale_price) + '</div></div>';
+          }).join("");
+          host.style.display = "block";
+          host.querySelectorAll("[data-pick]").forEach(function (el) {
+            el.addEventListener("click", function () {
+              var idx = Number(el.getAttribute("data-pick"));
+              addItemToCart(searchResults[idx]);
+              var s = document.getElementById("posItemSearch");
+              s.value = "";
+              s.focus();
+              host.style.display = "none";
+            });
+          });
+        }
+
+        async function searchItems(q) {
+          try {
+            var d = await apiGet("/api/trade/items?q=" + encodeURIComponent(q || ""));
+            var items = (d.items || []).filter(function (x) { return x.is_active; }).slice(0, 8);
+            renderItemResults(items);
+          } catch (e) {
+            renderItemResults([]);
+          }
+        }
+
+        function addItemToCart(item) {
+          if (!item) return;
+          var existing = cart.find(function (r) { return r.item_id === item.id; });
+          if (existing) {
+            existing.qty = round2(Number(existing.qty) + 1);
+          } else {
+            var qty = 1, price = Number(item.default_sale_price) || 0;
+            cart.push({
+              item_id: item.id,
+              code: item.code,
+              name: item.name,
+              available: Number(item.quantity) || 0,
+              qty: qty,
+              sale_price: price,
+              discount: 0,
+              is_taxable: !!item.is_taxable,
+              tax_rate: Number(item.tax_rate) || 0,
+            });
+          }
+          renderCart();
+        }
+
+        function renderCart() {
+          var body = document.getElementById("posCartBody");
+          var empty = document.getElementById("posCartEmpty");
+          if (!body) return;
+          if (!cart.length) {
+            body.innerHTML = "";
+            if (empty) empty.style.display = "block";
+            renderSummary();
+            return;
+          }
+          if (empty) empty.style.display = "none";
+          body.innerHTML = cart.map(function (row, i) {
+            var over = Number(row.qty) > Number(row.available);
+            var overBadge = over ? '<div style="color:#dc2626;font-size:0.68rem;font-weight:800;">الكمية أكبر من المتاح (' + esc(row.available) + ')</div>' : "";
+            var inputStyle = "width:100%;min-width:60px;padding:5px 6px;border-radius:6px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--input-text);font-weight:700;text-align:center;font-size:0.8rem;";
+            return '<tr data-row="' + i + '">' +
+              '<td style="padding:0.5rem;"><div style="font-weight:800;color:var(--text-heading);font-size:0.85rem;">' + esc(row.name) + '</div><div style="font-size:0.7rem;color:var(--text-muted);">' + esc(row.code) + '</div><span data-over="' + i + '">' + overBadge + '</span></td>' +
+              '<td style="padding:0.4rem;"><input type="number" step="0.01" min="0.01" value="' + esc(row.qty) + '" data-f="qty" style="' + inputStyle + '" /></td>' +
+              '<td style="padding:0.4rem;"><input type="number" step="0.01" min="0" value="' + esc(row.sale_price) + '" data-f="sale_price" style="' + inputStyle + '" /></td>' +
+              '<td style="padding:0.4rem;"><input type="number" step="0.01" min="0" value="' + esc(row.discount) + '" data-f="discount" style="' + inputStyle + '" /></td>' +
+              '<td data-tax="' + i + '" style="padding:0.4rem;text-align:center;color:var(--text-muted);font-size:0.78rem;" title="ضريبة القيمة المضافة 15% تُحتسب تلقائياً من السعر شامل الضريبة">' + money(computeLine(row).tax) + '</td>' +
+              '<td data-total="' + i + '" style="padding:0.5rem;font-weight:800;color:var(--gold-soft);white-space:nowrap;">' + money(lineTotal(row)) + '</td>' +
+              '<td style="padding:0.4rem;"><button type="button" data-del="' + i + '" class="op-btn-chip op-btn-chip--danger" style="padding:4px 10px;">✕</button></td>' +
+              '</tr>';
+          }).join("");
+          body.querySelectorAll("input[data-f]").forEach(function (inp) {
+            inp.addEventListener("input", function () {
+              var tr = inp.closest("tr");
+              var idx = Number(tr.getAttribute("data-row"));
+              var field = inp.getAttribute("data-f");
+              cart[idx][field] = Number(inp.value) || 0;
+              var row = cart[idx];
+              var line = computeLine(row);
+              var taxCell = tr.querySelector('[data-tax="' + idx + '"]');
+              if (taxCell) taxCell.textContent = money(line.tax);
+              var totalCell = tr.querySelector('[data-total="' + idx + '"]');
+              if (totalCell) totalCell.textContent = money(line.total);
+              var overCell = tr.querySelector('[data-over="' + idx + '"]');
+              if (overCell) {
+                var over = Number(row.qty) > Number(row.available);
+                overCell.innerHTML = over ? '<div style="color:#dc2626;font-size:0.68rem;font-weight:800;">الكمية أكبر من المتاح (' + esc(row.available) + ')</div>' : "";
+              }
+              renderSummary();
+            });
+          });
+          body.querySelectorAll("[data-del]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              cart.splice(Number(btn.getAttribute("data-del")), 1);
+              renderCart();
+            });
+          });
+          renderSummary();
+        }
+
+        function renderSummary() {
+          var sub = 0, disc = 0, tax = 0, grand = 0;
+          cart.forEach(function (r) {
+            var line = computeLine(r);
+            sub += line.preTax;
+            tax += line.tax;
+            grand += line.total;
+            disc += Number(r.discount) || 0;
+          });
+          var set = function (id, v) { var el = document.getElementById(id); if (el) el.textContent = money(v); };
+          set("posSubTotal", sub);
+          set("posDiscTotal", disc);
+          set("posTaxTotal", tax);
+          var gEl = document.getElementById("posGrandTotal");
+          if (gEl) gEl.textContent = money(grand);
+        }
+
+        function resetInvoiceForm() {
+          cart = [];
+          lastSavedSaleId = null;
+          var noEl = document.getElementById("posInvoiceNo");
+          if (noEl) noEl.value = genInvoiceNo();
+          var custEl = document.getElementById("posCustomerName");
+          if (custEl) custEl.value = "";
+          var payEl = document.getElementById("posPaymentType");
+          if (payEl) payEl.value = "cash";
+          refreshDateTime();
+          renderCart();
+          var searchEl = document.getElementById("posItemSearch");
+          if (searchEl) searchEl.focus();
+        }
+
+        function buildSalePayload() {
+          var grand = 0;
+          cart.forEach(function (r) { grand += computeLine(r).total; });
+          grand = Math.max(0, grand);
+          var paymentType = (document.getElementById("posPaymentType") || {}).value || "cash";
+          return {
+            invoice_no: document.getElementById("posInvoiceNo").value || genInvoiceNo(),
+            customer_name: (document.getElementById("posCustomerName").value || "").trim() || "عميل نقدي",
+            sale_date: new Date().toISOString().slice(0, 10),
+            payment_type: paymentType,
+            discount: 0,
+            paid_amount: paymentType === "credit" ? 0 : round2(grand),
+            seller_name: "",
+            branch_name: "",
+            // sale_price sent to the server is the EXCLUSIVE (before-tax) unit price and
+            // tax_amount is the currency amount of VAT for the line, so that the server's own
+            // total = sale_price*qty + tax_amount reconstructs exactly what is shown here
+            // (price entered in the POS is VAT-inclusive; tax is derived automatically at 15%).
+            lines: cart.map(function (r) {
+              var line = computeLine(r);
+              var qty = Number(r.qty) || 0;
+              var unitPriceExclTax = qty > 0 ? line.preTax / qty : 0;
+              return {
+                item_id: r.item_id,
+                qty: qty,
+                sale_price: round2(Math.max(0, unitPriceExclTax)),
+                tax_amount: round2(line.tax),
+              };
+            }),
+          };
+        }
+
+        function buildQrPayload(details) {
+          var total = Number(details.total_amount || 0).toFixed(2);
+          var tax = (details.lines || []).reduce(function (s, x) { return s + Number(x.tax_amount || 0); }, 0).toFixed(2);
+          return "الشركة:" + (companyProfile.company_name || "") + "|فاتورة:" + details.invoice_no + "|التاريخ:" + details.sale_date + "|الإجمالي:" + total + "|الضريبة:" + tax;
+        }
+
+        function invoicePrintHtml(details) {
+          var lines = details.lines || [];
+          var logoHtml = companyProfile.logo_url ? '<img src="' + esc(companyProfile.logo_url) + '" style="max-width:110px;max-height:70px;object-fit:contain;" />' : "";
+          var rowsHtml = lines.map(function (x) {
+            return "<tr><td>" + esc(x.item_name) + "</td><td>" + esc(x.qty) + "</td><td>" + Number(x.sale_price).toFixed(2) + "</td><td>" + Number(x.tax_amount).toFixed(2) + "</td><td>" + Number(x.line_total).toFixed(2) + "</td></tr>";
+          }).join("");
+          var qrPayload = buildQrPayload(details);
+          var scriptOpen = "<" + "script src=\"https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js\"><" + "/script>";
+          var inlineScriptOpen = "<" + "script>";
+          var inlineScriptClose = "<" + "/script>";
+          var html = "<!doctype html><html lang=\"ar\" dir=\"rtl\"><head><meta charset=\"UTF-8\">" +
+            "<title>فاتورة " + esc(details.invoice_no) + "</title>" +
+            "<style>body{font-family:Arial,sans-serif;padding:18px;color:#111;} .invoice{max-width:820px;margin:0 auto;} " +
+            ".inv-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #b8863a;padding-bottom:12px;margin-bottom:12px;} " +
+            "table{width:100%;border-collapse:collapse;margin-top:10px;} th,td{border:1px solid #ccc;padding:6px 8px;text-align:right;font-size:13px;} " +
+            "th{background:#f6f1e4;} .totals{margin-top:12px;width:280px;margin-inline-start:auto;} .totals div{display:flex;justify-content:space-between;padding:3px 0;font-size:13px;} " +
+            ".grand{font-weight:800;font-size:1.3rem;border-top:2px solid #b8863a;margin-top:6px;padding-top:6px;} " +
+            ".footer{margin-top:20px;text-align:center;font-size:12px;color:#555;} #qrHost{margin-top:14px;text-align:center;}</style></head><body>" +
+            "<div class=\"invoice\">" +
+            "<div class=\"inv-head\">" +
+            "<div>" + logoHtml + "<h2 style=\"margin:6px 0;\">" + esc(companyProfile.company_name || "") + "</h2>" +
+            "<div style=\"font-size:12px;\">" + esc(companyProfile.address || "") + (companyProfile.city ? ("، " + esc(companyProfile.city)) : "") + "</div>" +
+            "<div style=\"font-size:12px;\">" + (companyProfile.commercial_register ? ("س.ت: " + esc(companyProfile.commercial_register) + " &nbsp; ") : "") + (companyProfile.tax_number ? ("ر.ض: " + esc(companyProfile.tax_number)) : "") + "</div>" +
+            "</div>" +
+            "<div style=\"text-align:left;font-size:13px;\">" +
+            "<div>رقم الفاتورة: <b>" + esc(details.invoice_no) + "</b></div>" +
+            "<div>التاريخ: <b>" + esc(details.sale_date) + "</b></div>" +
+            "<div>العميل: <b>" + esc(details.customer_name) + "</b></div>" +
+            "<div>طريقة الدفع: <b>" + esc(details.payment_type) + "</b></div>" +
+            "</div></div>" +
+            "<table><thead><tr><th>الصنف</th><th>الكمية</th><th>السعر</th><th>الضريبة</th><th>الإجمالي</th></tr></thead><tbody>" + rowsHtml + "</tbody></table>" +
+            "<div class=\"totals\">" +
+            "<div><span>الإجمالي قبل الضريبة</span><span>" + (Number(details.total_amount || 0) - lines.reduce(function (s, x) { return s + Number(x.tax_amount || 0); }, 0)).toFixed(2) + "</span></div>" +
+            "<div><span>الضريبة</span><span>" + lines.reduce(function (s, x) { return s + Number(x.tax_amount || 0); }, 0).toFixed(2) + "</span></div>" +
+            "<div class=\"grand\"><span>الإجمالي النهائي</span><span>" + Number(details.total_amount || 0).toFixed(2) + " " + esc(posSettings.currency || "SAR") + "</span></div>" +
+            "</div>" +
+            "<div id=\"qrHost\"></div>" +
+            "<div class=\"footer\">" + esc(posSettings.thermal_header || "") + "</div>" +
+            "</div>" +
+            scriptOpen +
+            inlineScriptOpen + "try{new QRCode(document.getElementById('qrHost'),{text:" + JSON.stringify(qrPayload) + ",width:110,height:110});}catch(e){}window.onload=function(){setTimeout(function(){window.print();},300);};" + inlineScriptClose +
+            "</body></html>";
+          return html;
+        }
+
+        function openPrintInvoice(details) {
+          var w = window.open("", "_blank");
+          if (!w) { showToast("يرجى السماح بالنوافذ المنبثقة للطباعة", "#dc2626"); return; }
+          w.document.open();
+          w.document.write(invoicePrintHtml(details));
+          w.document.close();
+          w.focus();
+        }
+
+        async function saveInvoice() {
+          if (!cart.length) { showToast("أضف صنفًا واحدًا على الأقل قبل الحفظ", "#dc2626"); return; }
+          try {
+            var payload = buildSalePayload();
+            var res = await apiPostJson("/api/trade/sales", payload);
+            lastSavedSaleId = res.id;
+            showToast("تم حفظ الفاتورة بنجاح ✔️", "#22c55e");
+            var details = await apiGet("/api/trade/sales/" + encodeURIComponent(res.id));
+            openPrintInvoice(details);
+          } catch (e) {
+            showToast(e.message || "تعذر حفظ الفاتورة", "#dc2626");
+          }
+        }
+
+        async function printCurrentInvoice() {
+          if (!lastSavedSaleId) { showToast("احفظ الفاتورة أولاً قبل الطباعة", "#dc2626"); return; }
+          try {
+            var details = await apiGet("/api/trade/sales/" + encodeURIComponent(lastSavedSaleId));
+            openPrintInvoice(details);
+          } catch (e) {
+            showToast(e.message || "تعذر تحميل الفاتورة للطباعة", "#dc2626");
+          }
+        }
+
+        async function suspendInvoice() {
+          if (!cart.length) { showToast("السلة فارغة، لا يوجد ما يتم تعليقه", "#dc2626"); return; }
+          try {
+            await apiPostJson("/api/trade/sales/suspend", buildSalePayload());
+            showToast("تم تعليق الفاتورة ✔️", "#22c55e");
+            resetInvoiceForm();
+          } catch (e) {
+            showToast(e.message || "تعذر تعليق الفاتورة", "#dc2626");
+          }
+        }
+
+        function renderResumeList(rows) {
+          var host = document.getElementById("posResumeList");
+          if (!host) return;
+          if (!rows.length) {
+            host.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-weight:700;padding:1.5rem 0;">لا توجد فواتير معلقة حاليًا</div>';
+            return;
+          }
+          host.innerHTML = rows.map(function (x, i) {
+            return '<div data-resume="' + i + '" style="padding:0.75rem;border:1px solid var(--gold-dim);border-radius:12px;margin-bottom:0.5rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">' +
+              '<div><div style="font-weight:800;color:var(--text-heading);">' + esc(x.invoice_no) + '</div>' +
+              '<div style="font-size:0.75rem;color:var(--text-muted);">' + esc(x.customer_name) + ' — ' + esc(x.sale_date) + '</div></div>' +
+              '<button type="button" class="op-btn-chip op-btn-chip--gold" style="padding:6px 14px;">استرجاع</button></div>';
+          }).join("");
+          host.querySelectorAll("[data-resume]").forEach(function (el) {
+            el.addEventListener("click", async function () {
+              var idx = Number(el.getAttribute("data-resume"));
+              var row = rows[idx];
+              try {
+                var res = await apiPostJson("/api/trade/sales/suspended/" + encodeURIComponent(row.id) + "/checkout", {});
+                var details = await apiGet("/api/trade/sales/" + encodeURIComponent(res.sale_id));
+                closeResumeModal();
+                lastSavedSaleId = res.sale_id;
+                cart = [];
+                renderCart();
+                openPrintInvoice(details);
+                showToast("تم استرجاع الفاتورة وإتمامها ✔️", "#22c55e");
+              } catch (e) {
+                showToast(e.message || "تعذر استرجاع الفاتورة", "#dc2626");
+              }
+            });
+          });
+        }
+
+        async function openResumeModal() {
+          try {
+            var d = await apiGet("/api/trade/sales/suspended?limit=50");
+            renderResumeList(d.items || []);
+            document.getElementById("posResumeModal").style.display = "flex";
+          } catch (e) {
+            showToast(e.message || "تعذر تحميل الفواتير المعلقة", "#dc2626");
+          }
+        }
+
+        function closeResumeModal() {
+          var m = document.getElementById("posResumeModal");
+          if (m) m.style.display = "none";
+        }
+
+        async function deleteCurrentInvoice() {
+          if (!lastSavedSaleId) {
+            if (!cart.length) { showToast("لا توجد فاتورة لحذفها", "#dc2626"); return; }
+            resetInvoiceForm();
+            showToast("تم تفريغ الفاتورة الحالية", "#22c55e");
+            return;
+          }
+          if (!confirm("هل تريد حذف هذه الفاتورة نهائيًا؟ سيتم إرجاع الكميات إلى المخزون.")) return;
+          try {
+            await apiDelete("/api/trade/sales/" + encodeURIComponent(lastSavedSaleId));
+            showToast("تم حذف الفاتورة ✔️", "#22c55e");
+            resetInvoiceForm();
+          } catch (e) {
+            showToast(e.message || "تعذر حذف الفاتورة", "#dc2626");
+          }
+        }
+
+        var searchDebounce = null;
+        var searchInputEl = document.getElementById("posItemSearch");
+        if (searchInputEl) {
+          searchInputEl.addEventListener("input", function () {
+            var q = searchInputEl.value || "";
+            if (searchDebounce) clearTimeout(searchDebounce);
+            if (!q.trim()) { renderItemResults([]); return; }
+            searchDebounce = setTimeout(function () { searchItems(q); }, 220);
+          });
+          searchInputEl.addEventListener("keydown", function (ev) {
+            if (ev.key === "Enter") {
+              ev.preventDefault();
+              if (searchResults.length) {
+                addItemToCart(searchResults[0]);
+                searchInputEl.value = "";
+                renderItemResults([]);
+              }
+            }
+          });
+        }
+        document.addEventListener("click", function (ev) {
+          var host = document.getElementById("posItemResults");
+          if (host && !host.contains(ev.target) && ev.target !== searchInputEl) host.style.display = "none";
+        });
+
+        var saveBtn = document.getElementById("posSaveBtn");
+        if (saveBtn) saveBtn.addEventListener("click", function () { saveInvoice(); });
+        var printBtn = document.getElementById("posPrintBtn");
+        if (printBtn) printBtn.addEventListener("click", function () { printCurrentInvoice(); });
+        var newBtn = document.getElementById("posNewBtn");
+        if (newBtn) newBtn.addEventListener("click", function () { resetInvoiceForm(); });
+        var suspendBtn = document.getElementById("posSuspendBtn");
+        if (suspendBtn) suspendBtn.addEventListener("click", function () { suspendInvoice(); });
+        var resumeBtn = document.getElementById("posResumeBtn");
+        if (resumeBtn) resumeBtn.addEventListener("click", function () { openResumeModal(); });
+        var deleteBtn = document.getElementById("posDeleteBtn");
+        if (deleteBtn) deleteBtn.addEventListener("click", function () { deleteCurrentInvoice(); });
+        var manageItemsBtn = document.getElementById("posManageItemsBtn");
+        if (manageItemsBtn) manageItemsBtn.addEventListener("click", function () { window.open("/trade/items", "_blank"); });
+        var resumeCloseBtn = document.getElementById("posResumeModalClose");
+        if (resumeCloseBtn) resumeCloseBtn.addEventListener("click", closeResumeModal);
+        var resumeOverlay = document.getElementById("posResumeModal");
+        if (resumeOverlay) resumeOverlay.addEventListener("click", function (ev) { if (ev.target === resumeOverlay) closeResumeModal(); });
+
+
+        function statusColor(qty, minQty) {
+          if (qty <= 0) return "#ef4444";
+          if (qty <= minQty) return "#f59e0b";
+          return "#10b981";
+        }
+
+        function renderDashStats(t) {
+          var cards = [
+            { icon: "📦", label: "عدد الأصناف", value: esc(t.item_count) },
+            { icon: "🧮", label: "إجمالي الكمية", value: esc(t.inventory_qty) },
+            { icon: "💰", label: "قيمة المخزون", value: money(t.inventory_value) },
+            { icon: "🧾", label: "عدد الفواتير", value: esc(t.invoice_count) },
+            { icon: "📈", label: "إجمالي المبيعات", value: money(t.sales) },
+            { icon: "📉", label: "إجمالي المشتريات", value: money(t.purchases) },
+            { icon: "✅", label: "الربح", value: money(t.profit) },
+            { icon: "🧾", label: "الضريبة المستحقة", value: money(t.tax_due) },
+          ];
+          document.getElementById("dashStats").innerHTML = cards.map(function (c) {
+            return '<div class="op-stat-card"><div class="op-stat-icon">' + c.icon + '</div><div class="op-stat-value">' + c.value + '</div><div class="op-stat-label">' + c.label + '</div></div>';
+          }).join("");
+        }
+
+        function renderDashLowStock(list) {
+          var host = document.getElementById("dashLowStock");
+          if (!list || !list.length) { host.innerHTML = '<div class="opacity-60 text-sm">لا توجد أصناف منخفضة</div>'; return; }
+          host.innerHTML = list.map(function (x) {
+            return '<div class="dash-mini-row"><span>' + esc(x.name) + '</span><span style="font-weight:800;color:' + statusColor(x.quantity, x.min_qty) + ';">' + esc(x.quantity) + '</span></div>';
+          }).join("");
+        }
+
+        function renderDashTopItems(list) {
+          var host = document.getElementById("dashTopItems");
+          if (!list || !list.length) { host.innerHTML = '<div class="opacity-60 text-sm">لا توجد مبيعات بعد</div>'; return; }
+          host.innerHTML = list.map(function (x) {
+            return '<div class="dash-mini-row"><span>' + esc(x.item) + '</span><span style="font-weight:800;">' + money(x.sales) + '</span></div>';
+          }).join("");
+        }
+
+        function renderDashLatestInvoices(list) {
+          var host = document.getElementById("dashLatestInvoices");
+          if (!list || !list.length) { host.innerHTML = '<div class="opacity-60 text-sm">لا توجد فواتير بعد</div>'; return; }
+          host.innerHTML = list.map(function (x) {
+            return '<div class="dash-mini-row"><span>' + esc(x.invoice_no) + ' — ' + esc(x.customer_name) + '</span><span style="font-weight:800;">' + money(x.total_amount) + '</span></div>';
+          }).join("");
+        }
+
+        async function loadDashboardSummary() {
+          try {
+            var d = await apiGet("/api/trade/dashboard-summary");
+            renderDashStats(d.totals || {});
+            renderDashLowStock(d.low_stock_items || []);
+            renderDashTopItems(d.top_items || []);
+            renderDashLatestInvoices(d.latest_invoices || []);
+          } catch (e) {
+            var host = document.getElementById("dashStats");
+            if (host) host.innerHTML = '<div class="opacity-60 text-sm">تعذر تحميل بيانات لوحة المعلومات</div>';
+          }
+        }
+        var dashRefreshBtnEl = document.getElementById("dashRefreshBtn");
+        if (dashRefreshBtnEl) dashRefreshBtnEl.addEventListener("click", loadDashboardSummary);
+
+        (async function init() {
+          await loadCompanyProfile();
+          await loadPosSettings();
+          resetInvoiceForm();
+          setInterval(refreshDateTime, 30000);
+          loadDashboardSummary();
+          setInterval(loadDashboardSummary, 60000);
+        })();
+      })();
+    </script>
+
+</body>
+</html>

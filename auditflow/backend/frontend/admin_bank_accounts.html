@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("auditflow-theme");
+          var d = t === "light" ? false : true;
+          document.documentElement.classList.toggle("dark", d);
+        } catch (e) {}
+      })();
+    </script>
+    <title>الحسابات البنكية — OptimalSuite AI</title>
+    <link rel="stylesheet" href="/static/tailwind.css?v=9" />
+    <link rel="stylesheet" href="/static/dark.css?v=9" />
+    <link rel="stylesheet" href="/static/admin_layout.css?v=1" />
+    <link rel="icon" href="/static/favicon.svg?v=9" />
+  </head>
+  <body class="admin2-shell" data-admin-active="bank-accounts" data-admin-title="الحسابات البنكية">
+    <div id="toast" class="hidden toast-host text-white px-4 py-3 rounded-xl font-extrabold text-sm"></div>
+    <div id="adminLayoutHost"></div>
+
+    <main id="adminContent" class="admin2-content">
+      <div class="a2-card" style="margin-bottom:1rem;">
+        <h2 class="a2-card-title">🏦 إضافة حساب بنكي جديد</h2>
+        <p style="font-size:0.8rem; color:var(--a2-text-muted); margin:0.2rem 0 0.8rem;">
+          هذه الحسابات تظهر للعملاء عند اختيار الدفع عبر الحوالة البنكية في صفحة الاشتراك. أضيفي حسابًا واحدًا نشطًا على الأقل حتى يظهر للعملاء.
+        </p>
+        <form id="bankAccForm" style="display:grid; grid-template-columns:repeat(2,1fr); gap:0.6rem;">
+          <div>
+            <label style="display:block; font-size:0.78rem; color:var(--a2-text-muted); margin-bottom:0.3rem;">اسم البنك</label>
+            <input id="bankNameInp" type="text" class="a2-input" style="width:100%;" placeholder="مثال: البنك الأهلي السعودي" required />
+          </div>
+          <div>
+            <label style="display:block; font-size:0.78rem; color:var(--a2-text-muted); margin-bottom:0.3rem;">اسم المستفيد</label>
+            <input id="beneficiaryNameInp" type="text" class="a2-input" style="width:100%;" placeholder="اسم صاحب الحساب" required />
+          </div>
+          <div>
+            <label style="display:block; font-size:0.78rem; color:var(--a2-text-muted); margin-bottom:0.3rem;">رقم الحساب</label>
+            <input id="accountNumberInp" type="text" class="a2-input" style="width:100%;" dir="ltr" placeholder="رقم الحساب" required />
+          </div>
+          <div>
+            <label style="display:block; font-size:0.78rem; color:var(--a2-text-muted); margin-bottom:0.3rem;">رقم الآيبان (IBAN)</label>
+            <input id="ibanInp" type="text" class="a2-input" style="width:100%;" dir="ltr" placeholder="SAxxxxxxxxxxxxxxxxxxxxxxxx" required />
+          </div>
+          <div style="grid-column:1 / -1;">
+            <button type="submit" id="bankAccSaveBtn" class="a2-btn">إضافة الحساب</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="a2-card">
+        <h2 class="a2-card-title" style="margin-bottom:0.8rem;">📋 الحسابات البنكية الحالية</h2>
+        <div style="overflow-x:auto;">
+          <table class="a2-table">
+            <thead>
+              <tr>
+                <th>اسم البنك</th>
+                <th>اسم المستفيد</th>
+                <th>رقم الحساب</th>
+                <th>الآيبان</th>
+                <th>الحالة</th>
+                <th>إجراء</th>
+              </tr>
+            </thead>
+            <tbody id="bankAccountsHost">
+              <tr><td colspan="6" class="a2-empty">جارٍ التحميل...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <script src="/static/app.js?v=19"></script>
+    <script src="/static/admin_layout.js?v=1"></script>
+    <script>
+      function escapeHtml(s) {
+        return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+      }
+
+      async function loadBankAccounts() {
+        const host = document.getElementById("bankAccountsHost");
+        host.innerHTML = '<tr><td colspan="6" class="a2-empty">جارٍ التحميل...</td></tr>';
+        try {
+          const data = await apiGet("/admin/bank-accounts");
+          const items = data.items || [];
+          if (!items.length) {
+            host.innerHTML = '<tr><td colspan="6" class="a2-empty">لا توجد حسابات بنكية بعد</td></tr>';
+            return;
+          }
+          host.innerHTML = "";
+          items.forEach((b) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${escapeHtml(b.bank_name)}</td>
+              <td>${escapeHtml(b.beneficiary_name)}</td>
+              <td dir="ltr">${escapeHtml(b.account_number)}</td>
+              <td dir="ltr" style="font-size:0.78rem;">${escapeHtml(b.iban)}</td>
+              <td>
+                <span class="a2-badge ${b.is_active ? "a2-badge-success" : "a2-badge-neutral"}">${b.is_active ? "نشط" : "معطّل"}</span>
+              </td>
+              <td>
+                <div style="display:flex; gap:0.4rem;">
+                  <button type="button" class="a2-btn a2-btn-sm a2-btn-outline" data-toggle-id="${b.id}" data-active="${b.is_active ? "1" : "0"}">${b.is_active ? "تعطيل" : "تفعيل"}</button>
+                  <button type="button" class="a2-btn a2-btn-sm a2-btn-danger" data-del-id="${b.id}">حذف</button>
+                </div>
+              </td>
+            `;
+            host.appendChild(tr);
+          });
+          host.querySelectorAll("[data-toggle-id]").forEach((btn) => {
+            btn.addEventListener("click", async () => {
+              try {
+                const nextActive = btn.getAttribute("data-active") !== "1";
+                await apiPatchJson("/admin/bank-accounts/" + encodeURIComponent(btn.getAttribute("data-toggle-id")), { is_active: nextActive });
+                showToast(nextActive ? "تم تفعيل الحساب" : "تم تعطيل الحساب", "#10b981");
+                loadBankAccounts();
+              } catch (e) {
+                showToast(e.message || "فشل تحديث الحساب", "#ef4444");
+              }
+            });
+          });
+          host.querySelectorAll("[data-del-id]").forEach((btn) => {
+            btn.addEventListener("click", async () => {
+              if (!confirm("هل تريدين حذف هذا الحساب البنكي؟ لا يمكن التراجع.")) return;
+              try {
+                await apiDelete("/admin/bank-accounts/" + encodeURIComponent(btn.getAttribute("data-del-id")));
+                showToast("تم حذف الحساب", "#10b981");
+                loadBankAccounts();
+              } catch (e) {
+                showToast(e.message || "فشل الحذف", "#ef4444");
+              }
+            });
+          });
+        } catch (e) {
+          host.innerHTML = '<tr><td colspan="6" class="a2-empty">تعذر تحميل الحسابات البنكية</td></tr>';
+        }
+      }
+
+      document.getElementById("bankAccForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById("bankAccSaveBtn");
+        btn.disabled = true;
+        btn.textContent = "جارٍ الحفظ...";
+        try {
+          await apiPostJson("/admin/bank-accounts", {
+            bank_name: document.getElementById("bankNameInp").value || "",
+            beneficiary_name: document.getElementById("beneficiaryNameInp").value || "",
+            account_number: document.getElementById("accountNumberInp").value || "",
+            iban: document.getElementById("ibanInp").value || "",
+          });
+          showToast("تمت إضافة الحساب البنكي بنجاح", "#10b981");
+          document.getElementById("bankAccForm").reset();
+          loadBankAccounts();
+        } catch (e) {
+          showToast(e.message || "فشل حفظ الحساب البنكي", "#ef4444");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "إضافة الحساب";
+        }
+      });
+
+      loadBankAccounts();
+    </script>
+  </body>
+</html>

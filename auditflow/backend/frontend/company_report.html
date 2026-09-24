@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("auditflow-theme");
+          var d = t === "dark" || (t !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.classList.toggle("dark", d);
+        } catch (e) {}
+      })();
+    </script>
+    <title>تقرير مطابقة شركات | OptimalSuite AI</title>
+    <link rel="icon" href="/static/favicon.svg?v=13" type="image/svg+xml" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/tailwind.css?v=13" />
+    <link rel="stylesheet" href="/static/dark.css?v=13" />
+    <style>
+      body { font-family: "IBM Plex Sans Arabic", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+      @media print {
+        .no-print,
+        .erp-sidebar,
+        .erp-topbar,
+        #toast {
+          display: none !important;
+        }
+        .erp-main {
+          padding: 0 !important;
+        }
+        body {
+          background: white !important;
+        }
+      }
+
+      /* ============================================================
+         مطابقة الشركات — هوية بصرية "فخمة" (كحلي داكن + ذهبي) مستقلة
+         تماماً عن مطابقة الفروع. كل قاعدة هنا مقيّدة بالمحدد
+         body[data-report-type="companies"] فلا تؤثر إطلاقاً على صفحات
+         الفروع حتى لو أُدرجت هذه الورقة هناك بالخطأ مستقبلاً.
+         ============================================================ */
+      body[data-report-type="companies"] {
+        --gold: #c9a24d;
+        --gold-soft: #e8cd85;
+        --gold-dim: rgba(201, 162, 77, 0.32);
+        --navy-0: #070b16;
+        --navy-1: #0d1424;
+        --navy-2: #131b30;
+      }
+      body[data-report-type="companies"] .erp-content {
+        background: var(--navy-0) !important;
+      }
+      body[data-report-type="companies"] .erp-topbar {
+        background: rgba(10, 14, 26, 0.92) !important;
+        border-bottom-color: var(--gold-dim) !important;
+      }
+      body[data-report-type="companies"] .erp-topbar__title {
+        color: var(--gold-soft) !important;
+      }
+      body[data-report-type="companies"] .erp-search input {
+        background: var(--navy-1) !important;
+        border-color: var(--gold-dim) !important;
+        color: #f1e9d2 !important;
+      }
+      body[data-report-type="companies"] .erp-main {
+        background:
+          radial-gradient(900px 420px at 12% -10%, rgba(201, 162, 77, 0.12), transparent 60%),
+          radial-gradient(700px 380px at 100% 0%, rgba(201, 162, 77, 0.07), transparent 55%);
+      }
+      body[data-report-type="companies"] .erp-main .rounded-3xl.bg-white,
+      body[data-report-type="companies"] .erp-main .rounded-3xl.dark\:bg-slate-900 {
+        background: linear-gradient(175deg, var(--navy-2), var(--navy-1)) !important;
+        border: 1px solid var(--gold-dim) !important;
+        box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(201, 162, 77, 0.05) inset !important;
+        position: relative;
+        overflow: hidden;
+      }
+      body[data-report-type="companies"] .erp-main .rounded-3xl.bg-white::before,
+      body[data-report-type="companies"] .erp-main .rounded-3xl.dark\:bg-slate-900::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, var(--gold-soft), var(--gold), var(--gold-soft), transparent);
+        opacity: 0.9;
+      }
+      body[data-report-type="companies"] .erp-main h1,
+      body[data-report-type="companies"] .erp-main h2 {
+        color: #f4e9cf !important;
+        letter-spacing: 0.015em;
+      }
+      body[data-report-type="companies"] .erp-main p,
+      body[data-report-type="companies"] .erp-main label,
+      body[data-report-type="companies"] .erp-main span,
+      body[data-report-type="companies"] .erp-main div,
+      body[data-report-type="companies"] .erp-main .text-slate-600,
+      body[data-report-type="companies"] .erp-main .text-slate-700,
+      body[data-report-type="companies"] .erp-main .text-slate-900,
+      body[data-report-type="companies"] .erp-main .dark\:text-slate-50,
+      body[data-report-type="companies"] .erp-main .dark\:text-slate-100,
+      body[data-report-type="companies"] .erp-main .dark\:text-slate-300,
+      body[data-report-type="companies"] .erp-main .dark\:text-slate-400 {
+        color: #c3cbdd;
+      }
+      body[data-report-type="companies"] .erp-main h1,
+      body[data-report-type="companies"] .erp-main h1 * {
+        color: #f4e9cf !important;
+      }
+      body[data-report-type="companies"] .erp-main .bg-slate-50,
+      body[data-report-type="companies"] .erp-main .dark\:bg-slate-800\/40,
+      body[data-report-type="companies"] .erp-main .dark\:bg-slate-800\/50,
+      body[data-report-type="companies"] .erp-main .dark\:bg-slate-800\/60 {
+        background: rgba(255, 255, 255, 0.025) !important;
+        border-color: var(--gold-dim) !important;
+      }
+      body[data-report-type="companies"] .erp-main input,
+      body[data-report-type="companies"] .erp-main select,
+      body[data-report-type="companies"] .erp-main textarea,
+      body[data-report-type="companies"] .erp-main .dark\:bg-slate-950 {
+        background: var(--navy-0) !important;
+        border-color: rgba(201, 162, 77, 0.28) !important;
+        color: #f1e9d2 !important;
+      }
+      body[data-report-type="companies"] .erp-main input::placeholder,
+      body[data-report-type="companies"] .erp-main textarea::placeholder {
+        color: #5b6478 !important;
+      }
+      body[data-report-type="companies"] .erp-main input:focus,
+      body[data-report-type="companies"] .erp-main select:focus,
+      body[data-report-type="companies"] .erp-main textarea:focus {
+        box-shadow: 0 0 0 3px var(--gold-dim) !important;
+      }
+      body[data-report-type="companies"] .erp-main .dropzone {
+        background: var(--navy-0) !important;
+        border-color: rgba(201, 162, 77, 0.35) !important;
+      }
+      body[data-report-type="companies"] .erp-main .dropzone:hover {
+        border-color: var(--gold) !important;
+        background: rgba(201, 162, 77, 0.07) !important;
+      }
+      body[data-report-type="companies"] .btn-primary-analyze,
+      body[data-report-type="companies"] .audit-cta-link {
+        background: linear-gradient(270deg, #8a6a1f 0%, var(--gold) 45%, var(--gold-soft) 100%) !important;
+        color: #1a1406 !important;
+        box-shadow: 0 8px 22px rgba(201, 162, 77, 0.3) !important;
+      }
+      body[data-report-type="companies"] .btn-primary-analyze:hover:not(:disabled),
+      body[data-report-type="companies"] .audit-cta-link:hover {
+        filter: brightness(1.08);
+      }
+      body[data-report-type="companies"] .erp-sidebar a.nav-link--active {
+        background: linear-gradient(135deg, rgba(201, 162, 77, 0.24), rgba(201, 162, 77, 0.08)) !important;
+        border: 1px solid var(--gold-dim) !important;
+        color: var(--gold-soft) !important;
+        box-shadow: 0 0 20px rgba(201, 162, 77, 0.18) !important;
+      }
+      body[data-report-type="companies"] .erp-side-link:hover {
+        background: rgba(201, 162, 77, 0.14) !important;
+        color: var(--gold-soft) !important;
+      }
+      body[data-report-type="companies"] .erp-main .bg-emerald-50,
+      body[data-report-type="companies"] .erp-main .dark\:bg-emerald-950\/40 {
+        background: rgba(16, 185, 129, 0.1) !important;
+        border-color: rgba(16, 185, 129, 0.35) !important;
+      }
+      body[data-report-type="companies"] .erp-main .bg-rose-50,
+      body[data-report-type="companies"] .erp-main .dark\:bg-rose-950\/40 {
+        background: rgba(244, 63, 94, 0.1) !important;
+        border-color: rgba(244, 63, 94, 0.35) !important;
+      }
+      body[data-report-type="companies"] .erp-main .bg-amber-50,
+      body[data-report-type="companies"] .erp-main .dark\:bg-amber-950\/40 {
+        background: rgba(245, 158, 11, 0.1) !important;
+        border-color: rgba(245, 158, 11, 0.35) !important;
+      }
+      body[data-report-type="companies"] .erp-main .bg-indigo-50\/60,
+      body[data-report-type="companies"] .erp-main .dark\:bg-indigo-950\/30 {
+        background: rgba(201, 162, 77, 0.08) !important;
+        border-color: var(--gold-dim) !important;
+      }
+      body[data-report-type="companies"] .erp-main .border-indigo-200,
+      body[data-report-type="companies"] .erp-main .dark\:border-indigo-800 {
+        border-color: var(--gold-dim) !important;
+      }
+      body[data-report-type="companies"] .erp-main .text-indigo-900,
+      body[data-report-type="companies"] .erp-main .dark\:text-indigo-200 {
+        color: var(--gold-soft) !important;
+      }
+      body[data-report-type="companies"] .erp-main .bg-indigo-600 {
+        background: linear-gradient(270deg, #8a6a1f 0%, var(--gold) 100%) !important;
+        color: #1a1406 !important;
+      }
+      body[data-report-type="companies"] .erp-main .text-emerald-700,
+      body[data-report-type="companies"] .erp-main .text-emerald-800,
+      body[data-report-type="companies"] .erp-main .dark\:text-emerald-300,
+      body[data-report-type="companies"] .erp-main .dark\:text-emerald-400 {
+        color: #6ee7b7 !important;
+      }
+      body[data-report-type="companies"] .erp-main .text-rose-700,
+      body[data-report-type="companies"] .erp-main .text-rose-800,
+      body[data-report-type="companies"] .erp-main .dark\:text-rose-300,
+      body[data-report-type="companies"] .erp-main .dark\:text-rose-400 {
+        color: #fda4af !important;
+      }
+      body[data-report-type="companies"] .erp-main .text-amber-700,
+      body[data-report-type="companies"] .erp-main .text-amber-800,
+      body[data-report-type="companies"] .erp-main .dark\:text-amber-300,
+      body[data-report-type="companies"] .erp-main .dark\:text-amber-400 {
+        color: #fcd34d !important;
+      }
+      body[data-report-type="companies"] .erp-main #statTotal {
+        color: var(--gold-soft) !important;
+      }
+      body[data-report-type="companies"] .erp-main button.bg-slate-900,
+      body[data-report-type="companies"] .erp-main .dark\:bg-white {
+        background: linear-gradient(270deg, #8a6a1f 0%, var(--gold) 100%) !important;
+        color: #1a1406 !important;
+      }
+      body[data-report-type="companies"] .report-card--premium {
+        background: linear-gradient(175deg, var(--navy-2), var(--navy-1)) !important;
+        border: 1px solid var(--gold-dim) !important;
+        box-shadow: 0 14px 30px -14px rgba(0, 0, 0, 0.55) !important;
+        position: relative;
+      }
+      body[data-report-type="companies"] .report-card--premium::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 2px;
+        border-radius: 0.75rem 0.75rem 0 0;
+        background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      }
+      body[data-report-type="companies"] .report-card--premium,
+      body[data-report-type="companies"] .report-card--premium * {
+        color: #d8dde8;
+      }
+      body[data-report-type="companies"] .report-card--premium .font-extrabold {
+        color: #f0e6c8;
+      }
+      body[data-report-type="companies"] .gem-badge {
+        color: var(--gold);
+        flex-shrink: 0;
+      }
+    </style>
+  </head>
+  <body class="erp-shell bg-slate-100 dark:bg-[#050508] text-slate-900 dark:text-slate-100 min-h-screen" data-report-type="companies">
+    <div id="toast" class="hidden toast-host text-white px-4 py-3 rounded-xl font-extrabold text-sm"></div>
+
+    <aside class="erp-sidebar" aria-label="القائمة الرئيسية">
+      <a href="/" class="erp-sidebar__brand app-brand flex-col items-center gap-1" aria-label="OptimalSuite AI">
+        <span class="app-brand__mark" style="width: 2.35rem; height: 2.35rem">
+          <svg width="20" height="20" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M8 16l5 5 11-11" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </span>
+      </a>
+      <nav class="erp-sidebar__nav" aria-label="تنقل">
+        <a href="/" class="erp-side-link nav-link" data-nav="home" title="لوحة التحكم">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
+        </a>
+        <a href="/analyze" class="erp-side-link nav-link" data-nav="analyze" title="مطابقة الفروع">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        </a>
+        <a href="/convert" class="erp-side-link nav-link" data-nav="convert" title="PDF إلى Excel">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 11V3m0 0l3 3m-3-3L9 6" />
+          </svg>
+        </a>
+        <a href="/reports" class="erp-side-link nav-link" data-nav="reports" title="تقارير مطابقة الفروع">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </a>
+        <a href="/settings" class="erp-side-link nav-link" data-nav="settings" title="الإعدادات">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 001.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-1.065 2.572c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 00-1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </a>
+        <a href="/help" class="erp-side-link nav-link" data-nav="help" title="مساعدة">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.546-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </a>
+      </nav>
+    </aside>
+
+    <div class="erp-content min-h-0">
+      <header class="erp-topbar">
+        <button type="button" id="navMenuBtn" class="nav-toggle-btn nav-burger-only" aria-controls="mobileNavDrawer" aria-expanded="false" aria-label="فتح القائمة">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" />
+          </svg>
+        </button>
+        <div class="min-w-0 flex flex-col">
+          <span class="erp-topbar__title truncate">تقرير مطابقة شركات</span>
+          <span class="text-[0.65rem] font-extrabold text-slate-500 dark:text-slate-400 truncate">OptimalSuite <span style="color:var(--gold,#c9a24d);">AI</span></span>
+        </div>
+        <div class="erp-search hidden sm:block">
+          <input type="search" id="erpSearchInp" placeholder="بحث في الصفحة…" autocomplete="off" />
+        </div>
+        <div class="flex items-center gap-2 shrink-0 ms-auto">
+          <div id="authArea"></div>
+          <button type="button" id="themeToggle" class="theme-toggle-btn" title="الوضع الليلي/النهاري"></button>
+        </div>
+      </header>
+      <div id="mobileNavDrawer" class="mobile-nav-drawer md:hidden" role="navigation" aria-label="قائمة الجوال">
+        <a href="/" data-nav="home">لوحة التحكم</a>
+        <a href="/analyze" data-nav="analyze">مطابقة الفروع</a>
+        <a href="/convert" data-nav="convert">PDF إلى Excel</a>
+        <a href="/reports" data-nav="reports">تقارير مطابقة الفروع</a>
+        <a href="/settings" data-nav="settings">الإعدادات</a>
+        <a href="/help" data-nav="help">مساعدة</a>
+      </div>
+
+      <main class="erp-main">
+        <div class="max-w-6xl mx-auto w-full px-4 py-6 md:px-6">
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 md:p-8 shadow-sm">
+        <div class="flex items-start justify-between gap-4 flex-wrap no-print">
+          <div>
+            <h1 id="reportTitle" class="text-2xl font-extrabold text-slate-900 dark:text-slate-50 flex items-center gap-2"><svg class="gem-badge" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 3h12l3 5-9 13L3 8l3-5z" stroke-linejoin="round"/><path d="M3 8h18M9 3l3 5-3 13M15 3l-3 5 3 13" stroke-linejoin="round"/></svg>تقرير</h1>
+            <div id="reportBranches" class="text-slate-600 dark:text-slate-400 font-extrabold mt-2"></div>
+          </div>
+          <div class="flex gap-2 flex-wrap justify-end">
+            <button
+              type="button"
+              class="px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50 font-extrabold hover:bg-slate-50 dark:hover:bg-slate-800"
+              onclick="window.print()"
+            >
+              طباعة
+            </button>
+            <button
+              type="button"
+              class="px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50 font-extrabold hover:bg-slate-50 dark:hover:bg-slate-800"
+              onclick="downloadReportFile(qs('id'), 'csv')"
+            >
+              CSV
+            </button>
+            <button
+              type="button"
+              class="px-4 py-2 rounded-2xl bg-emerald-500 dark:bg-emerald-600 text-white font-extrabold hover:bg-emerald-600 dark:hover:bg-emerald-500"
+              onclick="downloadReportFile(qs('id'), 'excel')"
+            >
+              Excel
+            </button>
+            <button
+              type="button"
+              class="px-4 py-2 rounded-2xl bg-rose-500 dark:bg-rose-600 text-white font-extrabold hover:bg-rose-600 dark:hover:bg-rose-500"
+              onclick="downloadReportFile(qs('id'), 'pdf')"
+            >
+              PDF
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-4 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 no-print">
+          <div class="grid md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-extrabold text-slate-700 dark:text-slate-300 mb-1">وسوم (مفصولة بفواصل)</label>
+              <input
+                id="reportTagsInp"
+                class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
+                placeholder="مثال: يناير، فرع شمال"
+              />
+            </div>
+            <div class="flex flex-col justify-end gap-2">
+              <button type="button" id="reportArchiveBtn" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 font-extrabold text-sm text-slate-800 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-900"></button>
+            </div>
+          </div>
+          <label class="block text-sm font-extrabold text-slate-700 dark:text-slate-300 mt-3 mb-1">ملاحظات داخلية</label>
+          <textarea
+            id="reportNotesTa"
+            rows="3"
+            class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
+            placeholder="تعليقاتك على هذا التقرير (لا تُصدَّر مع الملفات القياسية)"
+          ></textarea>
+          <button type="button" id="saveReportMetaBtn" class="mt-3 px-4 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-extrabold text-sm hover:bg-slate-800 dark:hover:bg-slate-200">
+            حفظ الوسوم والملاحظات
+          </button>
+        </div>
+
+        <div class="grid md:grid-cols-4 gap-4 mt-6">
+          <div class="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
+            <div class="text-slate-500 dark:text-slate-400 font-extrabold text-sm">الإجمالي</div>
+            <div id="statTotal" class="text-3xl font-extrabold mt-2">0</div>
+          </div>
+          <div class="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4">
+            <div class="text-emerald-700 dark:text-emerald-400 font-extrabold text-sm">متطابق</div>
+            <div id="statMatched" class="text-3xl font-extrabold mt-2 text-emerald-800 dark:text-emerald-300">0</div>
+          </div>
+          <div class="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-2xl p-4">
+            <div class="text-rose-700 dark:text-rose-400 font-extrabold text-sm">أخطاء</div>
+            <div id="statErrors" class="text-3xl font-extrabold mt-2 text-rose-800 dark:text-rose-300">0</div>
+          </div>
+          <div class="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-2xl p-4">
+            <div class="text-amber-700 dark:text-amber-400 font-extrabold text-sm">تحذيرات</div>
+            <div id="statWarnings" class="text-3xl font-extrabold mt-2 text-amber-800 dark:text-amber-300">0</div>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4 mt-4">
+          <div class="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-2xl p-4">
+            <div class="text-rose-700 dark:text-rose-400 font-extrabold text-sm">
+              أخطاء <span id="branch1Label"></span>
+            </div>
+            <div id="branch1Errors" class="text-3xl font-extrabold mt-2 text-rose-800 dark:text-rose-300">0</div>
+            <div class="text-sm text-rose-700 dark:text-rose-300 mt-1">
+              نسبة الخطأ: <span id="branch1Rate" class="font-extrabold">0.0%</span>
+            </div>
+          </div>
+          <div class="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-2xl p-4">
+            <div class="text-rose-700 dark:text-rose-400 font-extrabold text-sm">
+              أخطاء <span id="branch2Label"></span>
+            </div>
+            <div id="branch2Errors" class="text-3xl font-extrabold mt-2 text-rose-800 dark:text-rose-300">0</div>
+            <div class="text-sm text-rose-700 dark:text-rose-300 mt-1">
+              نسبة الخطأ: <span id="branch2Rate" class="font-extrabold">0.0%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 p-4 rounded-2xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/60 dark:bg-indigo-950/30 no-print">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <h2 class="font-extrabold text-indigo-900 dark:text-indigo-200">تحليل ذكي للتقرير (AI)</h2>
+            <button
+              type="button"
+              id="aiInsightsBtn"
+              class="px-4 py-2 rounded-xl bg-indigo-600 text-white font-extrabold text-sm hover:bg-indigo-700"
+            >
+              توليد التحليل الذكي الشامل
+            </button>
+          </div>
+          <div id="aiInsightsHost" class="mt-3 text-sm text-slate-700 dark:text-slate-300"></div>
+        </div>
+
+        <div class="mt-6 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 no-print">
+          <div class="flex items-center justify-between gap-3 flex-wrap">
+            <h2 class="font-extrabold">فلترة الأخطاء</h2>
+            <div class="flex gap-2 flex-wrap">
+              <input id="filterDoc" placeholder="نوع المستند" class="rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-950 px-3 py-2 text-sm outline-none text-slate-900 dark:text-slate-100 placeholder:text-slate-400" />
+              <input id="filterAmount" placeholder="المبلغ" class="rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-950 px-3 py-2 text-sm outline-none w-32 text-slate-900 dark:text-slate-100 placeholder:text-slate-400" />
+              <input id="filterType" placeholder="نوع الخطأ (❌ أو ⚠️)" class="rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-950 px-3 py-2 text-sm outline-none w-44 text-slate-900 dark:text-slate-100 placeholder:text-slate-400" />
+              <button class="px-4 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-extrabold text-sm hover:bg-slate-800 dark:hover:bg-slate-200" onclick="applyTableFilters(window.__MISMATCHES__ || [])">تطبيق</button>
+              <button
+                type="button"
+                class="px-4 py-2 rounded-xl border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 font-extrabold text-sm hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                onclick="exportFilteredCsv()"
+              >
+                تصدير CSV للمعروض
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="mismatchTableHost" class="mt-4"></div>
+      </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="/static/app.js?v=19"></script>
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+        initAuthUI();
+        loadReportDetail().catch((e) => {
+          console.error(e);
+          showToast("فشل تحميل التقرير", "#ef4444");
+        });
+      });
+    </script>
+  </body>
+</html>
+

@@ -1,0 +1,1098 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("auditflow-theme");
+          var d = t === "light" ? false : true;
+          document.documentElement.classList.toggle("dark", d);
+        } catch (e) {
+          document.documentElement.classList.add("dark");
+        }
+      })();
+    </script>
+    <title>مستورد المنتجات | OptimalSuite AI</title>
+    <link rel="icon" href="/static/favicon.svg?v=9" type="image/svg+xml" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/tailwind.css?v=9" />
+    <link rel="stylesheet" href="/static/dark.css?v=9" />
+    <style>
+      body { font-family: "IBM Plex Sans Arabic", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+
+      /* ============================================================
+         لوحة التحكم الرئيسية الجديدة (op-dashboard) — هوية بصرية
+         فخمة بلونين (ذهبي ثابت + كحلي في الليلي / كريمي في النهاري)،
+         مستقلة تمامًا عن صفحات مطابقة الفروع ومطابقة الشركات القائمة.
+         مقيّدة بالكامل بالمحدد body.op-dashboard فلا تؤثر على أي صفحة
+         أخرى في الموقع.
+         ============================================================ */
+      body.op-dashboard {
+        --gold: #c9a24d;
+        --gold-soft: #b8863a;
+        --gold-dim: rgba(180, 140, 60, 0.35);
+        --bg-page: #f6f1e4;
+        --bg-1: #ffffff;
+        --bg-2: #fdf9ef;
+        --text-heading: #201a0c;
+        --text-body: #55503f;
+        --text-muted: #8a7f63;
+        --surface-soft: rgba(180, 140, 60, 0.07);
+        --input-bg: #ffffff;
+        --input-border: rgba(180, 140, 60, 0.4);
+        --input-text: #201a0c;
+        background: var(--bg-page) !important;
+        color: var(--text-body);
+      }
+      html.dark body.op-dashboard {
+        --gold: #c9a24d;
+        --gold-soft: #e8cd85;
+        --gold-dim: rgba(201, 164, 77, 0.32);
+        --bg-page: #070b16;
+        --bg-1: #131b30;
+        --bg-2: #0d1424;
+        --text-heading: #f4e9cf;
+        --text-body: #c7cede;
+        --text-muted: #8a93a8;
+        --surface-soft: rgba(255, 255, 255, 0.025);
+        --input-bg: #070b16;
+        --input-border: rgba(201, 164, 77, 0.28);
+        --input-text: #f1e9d2;
+      }
+
+      /* --- الهيكل: نعتمد على ترتيب flex الموجود أصلًا في .erp-shell/.erp-content
+         (وليس position:fixed) حتى يظهر الشريط الجانبي يمين الصفحة تلقائيًا مع RTL،
+         بنفس طريقة عمل .erp-sidebar الأصلية في باقي الموقع. --- */
+      body.op-dashboard.erp-shell { align-items: stretch; }
+      body.op-dashboard .op-sidebar {
+        display: none;
+        width: 84px;
+        flex-shrink: 0;
+        background: rgba(9, 13, 24, 0.04);
+        border-inline-end: 1px solid var(--gold-dim);
+        flex-direction: column;
+        align-items: center;
+        padding: 1.25rem 0;
+        gap: 0.5rem;
+      }
+      html.dark body.op-dashboard .op-sidebar { background: rgba(9, 13, 24, 0.95); }
+      @media (min-width: 768px) {
+        body.op-dashboard .op-sidebar { display: flex; }
+      }
+      body.op-dashboard .op-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 100vh;
+      }
+      body.op-dashboard .op-brand {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, var(--gold), #8a6a1f);
+        margin-bottom: 1.25rem;
+        box-shadow: 0 8px 20px rgba(180, 140, 60, 0.25);
+        flex-shrink: 0;
+      }
+      body.op-dashboard .op-sidebar-nav { flex: 1; overflow-y: auto; }
+      body.op-dashboard .op-side-link {
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-muted);
+        transition: all 0.15s ease;
+        flex-shrink: 0;
+      }
+      body.op-dashboard .op-side-link:hover {
+        background: var(--surface-soft);
+        color: var(--gold-soft);
+      }
+      body.op-dashboard .op-side-link.nav-link--active {
+        background: linear-gradient(135deg, rgba(180, 140, 60, 0.28), rgba(180, 140, 60, 0.08));
+        color: var(--gold-soft);
+        box-shadow: 0 0 18px rgba(180, 140, 60, 0.2);
+      }
+      body.op-dashboard .op-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.75rem;
+        background: var(--bg-1);
+        border-bottom: 1px solid var(--gold-dim);
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        backdrop-filter: blur(6px);
+      }
+      body.op-dashboard .op-profile { display: flex; align-items: center; gap: 0.6rem; }
+      body.op-dashboard .op-avatar {
+        width: 42px; height: 42px; border-radius: 50%;
+        background: linear-gradient(135deg, var(--gold-soft), var(--gold));
+        color: #1a1406; display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 1.05rem; flex-shrink: 0;
+      }
+      body.op-dashboard .op-profile-name { color: var(--text-heading); font-weight: 800; font-size: 0.9rem; line-height: 1.3; }
+      body.op-dashboard .op-profile-role { color: var(--text-muted); font-size: 0.72rem; font-weight: 700; }
+      body.op-dashboard .op-icon-btn {
+        width: 40px; height: 40px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--surface-soft);
+        border: 1px solid var(--gold-dim);
+        color: var(--text-body);
+        cursor: pointer;
+      }
+      body.op-dashboard .op-icon-btn:hover { background: rgba(180, 140, 60, 0.14); color: var(--gold-soft); }
+      body.op-dashboard .op-main { padding: 2rem 1.75rem 3rem; max-width: 1180px; margin: 0 auto; width: 100%; }
+      body.op-dashboard .op-hero { text-align: center; margin-bottom: 2.25rem; }
+      body.op-dashboard .op-hero-eyebrow { color: var(--text-muted); font-weight: 700; font-size: 0.95rem; }
+      body.op-dashboard .op-hero h1 { font-size: 2.2rem; font-weight: 800; color: var(--text-heading); margin: 0.35rem 0; }
+      body.op-dashboard .op-hero h1 b { color: var(--gold-soft); font-weight: 800; }
+      body.op-dashboard .op-hero p { color: var(--text-body); font-weight: 700; }
+      body.op-dashboard .op-hero-rule { width: 70px; height: 3px; background: linear-gradient(90deg, transparent, var(--gold), transparent); margin: 0.9rem auto 0; border-radius: 3px; }
+      body.op-dashboard .op-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+      @media (max-width: 900px) { body.op-dashboard .op-stats { grid-template-columns: repeat(2, 1fr); } }
+      body.op-dashboard .op-stat-card {
+        background: linear-gradient(175deg, var(--bg-2), var(--bg-1));
+        border: 1px solid var(--gold-dim);
+        border-radius: 16px; padding: 1.1rem; text-align: center;
+      }
+      body.op-dashboard .op-stat-icon { font-size: 1.4rem; margin-bottom: 0.4rem; }
+      body.op-dashboard .op-stat-value { font-size: 1.3rem; font-weight: 800; color: var(--gold-soft); }
+      body.op-dashboard .op-stat-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; margin-top: 0.15rem; }
+      body.op-dashboard .op-modules-panel {
+        background: linear-gradient(175deg, var(--bg-2), var(--bg-1));
+        border: 1px solid var(--gold-dim);
+        border-radius: 20px; padding: 1.5rem; position: relative; overflow: hidden;
+      }
+      body.op-dashboard .op-modules-panel::before {
+        content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
+        background: linear-gradient(90deg, transparent, var(--gold-soft), var(--gold), var(--gold-soft), transparent);
+        opacity: 0.9;
+      }
+      body.op-dashboard .op-modules-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem; }
+      body.op-dashboard .op-modules-head h2 { color: var(--text-heading); font-weight: 800; font-size: 1.1rem; }
+      body.op-dashboard .op-modules-head span { color: var(--text-muted); font-size: 0.8rem; font-weight: 700; }
+      body.op-dashboard .op-modules-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+      @media (max-width: 1024px) { body.op-dashboard .op-modules-grid { grid-template-columns: repeat(2, 1fr); } }
+      @media (max-width: 600px) { body.op-dashboard .op-modules-grid { grid-template-columns: 1fr; } }
+      body.op-dashboard .op-module-card {
+        background: var(--surface-soft);
+        border: 1px solid var(--gold-dim);
+        border-radius: 16px; padding: 1.25rem 1rem; text-align: center;
+        display: flex; flex-direction: column; align-items: center; transition: all 0.15s ease;
+      }
+      body.op-dashboard .op-module-card:hover { border-color: var(--gold); background: rgba(180, 140, 60, 0.1); transform: translateY(-2px); }
+      body.op-dashboard .op-module-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 0.85rem; font-size: 1.5rem; }
+      body.op-dashboard .op-module-title { color: var(--text-heading); font-weight: 800; font-size: 0.95rem; margin-bottom: 0.35rem; }
+      body.op-dashboard .op-module-desc { color: var(--text-muted); font-size: 0.75rem; font-weight: 700; line-height: 1.5; min-height: 2.6em; margin-bottom: 0.9rem; }
+      body.op-dashboard .op-module-btn {
+        display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.5rem 1.1rem; border-radius: 10px;
+        background: linear-gradient(270deg, #8a6a1f 0%, var(--gold) 45%, var(--gold-soft) 100%);
+        color: #1a1406; font-weight: 800; font-size: 0.8rem; box-shadow: 0 6px 16px rgba(180, 140, 60, 0.25);
+      }
+      body.op-dashboard .op-module-btn:hover { filter: brightness(1.08); }
+      body.op-dashboard .op-support-card {
+        margin-top: auto; width: 60px; border-radius: 14px;
+        background: var(--surface-soft); border: 1px solid var(--gold-dim);
+        display: flex; flex-direction: column; align-items: center; padding: 0.7rem 0.3rem; gap: 0.4rem; text-align: center;
+        flex-shrink: 0;
+      }
+      body.op-dashboard .op-shell-card {
+        background: linear-gradient(175deg, var(--bg-2), var(--bg-1));
+        border: 1px solid var(--gold-dim); border-radius: 20px; padding: 3.5rem 1.5rem; text-align: center;
+      }
+      body.op-dashboard .op-shell-icon { font-size: 3rem; margin-bottom: 1rem; }
+      body.op-dashboard .op-shell-card h1 { color: var(--text-heading); font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; }
+      body.op-dashboard .op-shell-badge {
+        display: inline-block; padding: 0.3rem 0.9rem; border-radius: 999px;
+        background: rgba(180, 140, 60, 0.15); color: var(--gold-soft); font-size: 0.75rem; font-weight: 800; margin-bottom: 1rem;
+      }
+      body.op-dashboard .op-shell-card p { color: var(--text-muted); font-weight: 700; max-width: 480px; margin: 0 auto 1.5rem; line-height: 1.7; }
+
+      /* --- إعادة تلوين محتوى منقول من صفحات قديمة (مثل الإعدادات) بنفس أسلوب Tailwind
+         القديم، لتتوافق مع الهوية الجديدة تلقائيًا في الوضعين الليلي والنهاري --- */
+      body.op-dashboard .op-main h1,
+      body.op-dashboard .op-main h2,
+      body.op-dashboard .op-main h3 { color: var(--text-heading) !important; }
+      body.op-dashboard .op-main p,
+      body.op-dashboard .op-main label,
+      body.op-dashboard .op-main span,
+      body.op-dashboard .op-main div,
+      body.op-dashboard .op-main td,
+      body.op-dashboard .op-main th { color: var(--text-body); }
+      body.op-dashboard .op-main .rounded-3xl,
+      body.op-dashboard .op-main .rounded-2xl.border {
+        background: linear-gradient(175deg, var(--bg-2), var(--bg-1)) !important;
+        border-color: var(--gold-dim) !important;
+      }
+      body.op-dashboard .op-main .bg-slate-50,
+      body.op-dashboard .op-main .bg-slate-800\/40,
+      body.op-dashboard .op-main .bg-slate-800\/80 {
+        background: var(--surface-soft) !important;
+        border-color: var(--gold-dim) !important;
+      }
+      body.op-dashboard .op-main input,
+      body.op-dashboard .op-main select,
+      body.op-dashboard .op-main textarea {
+        background: var(--input-bg) !important;
+        border-color: var(--input-border) !important;
+        color: var(--input-text) !important;
+      }
+      body.op-dashboard .op-main input::placeholder,
+      body.op-dashboard .op-main textarea::placeholder { color: var(--text-muted) !important; opacity: 0.8; }
+      body.op-dashboard .op-main button {
+        border-color: var(--gold-dim);
+      }
+      body.op-dashboard .op-main button.bg-slate-900,
+      body.op-dashboard .op-main button.bg-indigo-600 {
+        background: linear-gradient(270deg, #8a6a1f 0%, var(--gold) 45%, var(--gold-soft) 100%) !important;
+        color: #1a1406 !important;
+        border: none !important;
+      }
+      body.op-dashboard .op-main button.bg-emerald-600 {
+        background: #1f9d63 !important;
+        color: #fff !important;
+        border: none !important;
+      }
+      body.op-dashboard .op-main table thead { background: var(--surface-soft) !important; }
+      body.op-dashboard .op-main table tr { border-color: var(--gold-dim) !important; }
+      body.op-dashboard .op-main .text-emerald-600,
+      body.op-dashboard .op-main .text-emerald-700 { color: #1f9d63 !important; }
+      body.op-dashboard .op-main .text-amber-600 { color: #b8863a !important; }
+      body.op-dashboard .op-main .text-rose-600 { color: #c0435a !important; }
+      body.op-dashboard .op-main details summary { color: var(--text-heading); }
+
+    </style>
+  </head>
+  <body class="op-dashboard erp-shell min-h-screen" data-report-type="dashboard">
+    <div id="toast" class="hidden toast-host text-white px-4 py-3 rounded-xl font-extrabold text-sm"></div>
+
+    <aside class="op-sidebar" aria-label="القائمة الرئيسية">
+      <a href="/" class="op-brand" aria-label="OptimalSuite AI">
+        <svg width="22" height="22" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M16 3l4 4-9 9-4-4 9-9zM7 16l4 4-4 4-4-4 4-4zM21 16l4 4-9 9-4-4 9-9z" fill="#1a1406"/>
+        </svg>
+      </a>
+      <nav class="op-sidebar-nav erp-sidebar__nav flex flex-col items-center gap-2" aria-label="تنقل">
+        <a href="/" class="op-side-link nav-link nav-link--idle" data-nav="op-home" title="الرئيسية"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg></a>
+        <a href="/matching" class="op-side-link nav-link nav-link--idle" data-nav="op-matching" title="مطابقة الحسابات"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a4 4 0 115.657 0l-.879.878a2 2 0 00-.586 1.415V19a1 1 0 01-1 1h-2a1 1 0 01-1-1v-.464a2 2 0 00-.586-1.415l-.879-.878z"/></svg></a>
+        <a href="/branches-management" class="op-side-link nav-link nav-link--idle" data-nav="op-branches" title="إدارة الفروع"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21V7a2 2 0 012-2h6a2 2 0 012 2v14M13 21V11a2 2 0 012-2h4a2 2 0 012 2v10M7 9h2M7 13h2M7 17h2"/></svg></a>
+        <a href="/hr" class="op-side-link nav-link nav-link--idle" data-nav="op-hr" title="الموارد البشرية"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"/></svg></a>
+        <a href="/finance" class="op-side-link nav-link nav-link--active" data-nav="op-finance" title="مركز الأدوات الذكية"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 8h6m-5 4h4m-6 4h8M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></a>
+        <a href="/inventory-management" class="op-side-link nav-link nav-link--idle" data-nav="op-inventory" title="المالية"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></a>        <a href="/suppliers" class="op-side-link nav-link nav-link--idle" data-nav="op-suppliers" title="إدارة المستندات"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13h1l2 7h11l2-7h1M8 13V7a4 4 0 118 0v6m-9 0h10"/></svg></a>
+        <a href="/analytics" class="op-side-link nav-link nav-link--idle" data-nav="op-analytics" title="التقارير والتحليلات"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg></a>
+        <a href="/convert" class="op-side-link nav-link nav-link--idle" data-nav="op-convert" title="تحويل الملفات"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4M16 17H4m0 0l4 4m-4-4l4-4"/></svg></a>
+        <a href="/admin" class="op-side-link nav-link nav-link--idle" data-nav="op-admin" data-admin-only="1" title="لوحة المدير"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg></a>
+        <a href="/settings" class="op-side-link nav-link nav-link--idle" data-nav="op-settings" title="الإعدادات"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 001.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-1.065 2.572c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 00-1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></a>
+        <a href="#" data-nav="importer" style="display:none" aria-hidden="true" tabindex="-1"></a>
+        <a href="#" data-nav="companies" style="display:none" aria-hidden="true" tabindex="-1"></a>
+        <a href="#" data-nav="terms" style="display:none" aria-hidden="true" tabindex="-1"></a>
+        <a href="#" data-nav="privacy" style="display:none" aria-hidden="true" tabindex="-1"></a>
+        <a href="#" data-nav="agreement" style="display:none" aria-hidden="true" tabindex="-1"></a>
+      </nav>
+      <div class="op-support-card">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--gold-soft)"><path stroke-linecap="round" stroke-linejoin="round" d="M18 10a6 6 0 10-12 0v2a2 2 0 00-2 2v2a2 2 0 002 2h1v-6a5 5 0 0110 0v6h1a2 2 0 002-2v-2a2 2 0 00-2-2v-2z"/></svg>
+        <span style="font-size:0.62rem;font-weight:800;color:var(--gold-soft);">الدعم الفني</span>
+        <a href="/contact" style="font-size:0.58rem;font-weight:800;color:var(--text-muted);">تواصل معنا</a>
+      </div>
+    </aside>
+
+    <div id="mobileNavDrawer" class="mobile-nav-drawer md:hidden" role="navigation" aria-label="قائمة الجوال">
+      <a href="/" data-nav="op-home" class="nav-link nav-link--idle">الرئيسية</a>
+        <a href="/matching" data-nav="op-matching" class="nav-link nav-link--idle">مطابقة الحسابات</a>
+        <a href="/branches-management" data-nav="op-branches" class="nav-link nav-link--idle">إدارة الفروع</a>
+        <a href="/hr" data-nav="op-hr" class="nav-link nav-link--idle">الموارد البشرية</a>
+        <a href="/finance" data-nav="op-finance" class="nav-link nav-link--active">مركز الأدوات الذكية</a>
+        <a href="/inventory-management" data-nav="op-inventory" class="nav-link nav-link--idle">المالية</a>        <a href="/suppliers" data-nav="op-suppliers" class="nav-link nav-link--idle">إدارة المستندات</a>
+        <a href="/analytics" data-nav="op-analytics" class="nav-link nav-link--idle">التقارير والتحليلات</a>
+        <a href="/convert" data-nav="op-convert" class="nav-link nav-link--idle">تحويل الملفات</a>
+        <a href="/admin" data-nav="op-admin" data-admin-only="1" class="nav-link nav-link--idle">👑 لوحة المدير</a>
+        <a href="/settings" data-nav="op-settings" class="nav-link nav-link--idle">الإعدادات</a>
+      <a href="#" data-nav="importer" style="display:none" aria-hidden="true" tabindex="-1"></a>
+        <a href="#" data-nav="companies" style="display:none" aria-hidden="true" tabindex="-1"></a>
+        <a href="#" data-nav="terms" style="display:none" aria-hidden="true" tabindex="-1"></a>
+        <a href="#" data-nav="privacy" style="display:none" aria-hidden="true" tabindex="-1"></a>
+        <a href="#" data-nav="agreement" style="display:none" aria-hidden="true" tabindex="-1"></a>
+    </div>
+
+    <div class="op-content">
+      <header class="op-topbar">
+        <button type="button" id="navMenuBtn" class="nav-toggle-btn nav-burger-only op-icon-btn" aria-controls="mobileNavDrawer" aria-expanded="false" aria-label="فتح القائمة">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/></svg>
+        </button>
+        <button type="button" id="opBackBtn" class="op-icon-btn" title="رجوع" aria-label="رجوع">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <div class="min-w-0 flex flex-col">
+          <span style="font-weight:800;color:var(--text-heading);font-size:0.85rem;">مستورد المنتجات</span>
+        </div>
+        <div class="flex items-center gap-3" style="margin-inline-start:auto;">
+          <div class="op-avatar" id="opAvatarInitial">؟</div>
+          <div>
+            <div class="op-profile-name" id="opProfileName">زائر</div>
+            <div class="op-profile-role" id="opProfileRole">—</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" class="op-icon-btn" title="الإشعارات" aria-label="الإشعارات">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+          </button>
+          <button type="button" id="themeToggle" class="op-icon-btn" title="الوضع الليلي/النهاري" aria-label="تبديل الوضع"></button>
+          <button type="button" id="opFullscreenBtn" class="op-icon-btn" title="ملء الشاشة" aria-label="ملء الشاشة">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V6a2 2 0 012-2h2M4 16v2a2 2 0 002 2h2m8-16h2a2 2 0 012 2v2m-4 12h2a2 2 0 002-2v-2"/></svg>
+          </button>
+          <button type="button" id="opLogoutBtn" class="op-icon-btn" title="تسجيل الخروج" aria-label="تسجيل الخروج">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m0-9H5a2 2 0 00-2 2v14a2 2 0 002 2h2"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="op-main">
+
+        <div class="max-w-7xl mx-auto w-full px-4 py-6 md:px-6 space-y-4">
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl p-5">
+            <label id="siteUrlLabel" class="block text-sm font-extrabold mb-2">مصدر السحب</label>
+            <p id="siteUrlHelp" class="text-xs text-slate-500 dark:text-slate-400 mb-2">
+              اختر الوضع أولاً: سحب Tireex التقليدي، أو سحب عام من رابط تصنيف، أو Brand Deep Scan بالماركة.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <select id="importModeInp" class="rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-950 px-3 py-2 md:col-span-2">
+                <option value="classic" selected>الوضع التقليدي: رابط ماركة / نتائج بحث Tireex</option>
+                <option value="universal-category">السحب العام: من رابط تصنيف</option>
+                <option value="brand-deep-scan">Brand Deep Scan: بالماركة فقط</option>
+              </select>
+              <input
+                id="siteUrl"
+                class="rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-950 px-3 py-2 md:col-span-2"
+                placeholder="أدخل رابط صفحة الماركة أو نتائج البحث"
+              />
+              <select id="siteKeyInp" class="rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-950 px-3 py-2" title="اختر المتجر — المراد: almurad">
+                <option value="tireex">tireex — TireEX</option>
+                <option value="lumitires">lumitires — LumiTires</option>
+                <option value="kafaratplus">kafaratplus — كفرات بلس</option>
+                <option value="etar">etar — Etar</option>
+                <option value="almurad">almurad — المراد (جنوط)</option>
+                <option value="brwx">brwx — برومكس</option>
+              </select>
+              <p id="siteKeyHint" class="text-xs text-indigo-600 dark:text-indigo-400 md:col-span-2 hidden"></p>
+              <input
+                id="brandInp"
+                class="rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-950 px-3 py-2"
+                placeholder="اسم الماركة (مثال: Michelin) — اتركه فارغًا لسحب كل ما يظهر في الرابط"
+              />
+              <input
+                id="sizeInp"
+                class="rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-950 px-3 py-2"
+                placeholder="المقاس اختياري (مثال: 215/55R16)"
+              />
+              <input
+                id="limitInp"
+                type="number"
+                min="0"
+                max="500000"
+                value="0"
+                title="0 = سحب كل المنتجات المتاحة (سقف أمان على الخادم). أي رقم أكبر من 0 = حد أقصى بعد الفلترة."
+                placeholder="0 = الكل"
+                class="rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-950 px-3 py-2"
+              />
+              <input
+                id="maxPagesInp"
+                type="number"
+                min="1"
+                max="5000"
+                value="20"
+                title="أقصى صفحات القائمة (المراد ~6 صفحات لـ 113 منتج — 20 كافية)"
+                class="rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-950 px-3 py-2"
+              />
+              <select id="pageMode" class="rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-950 px-3 py-2">
+                <option value="single">صفحة واحدة فقط</option>
+                <option value="multi" selected>عدة صفحات</option>
+              </select>
+              <label
+                id="downloadImagesWrap"
+                class="hidden md:col-span-2 flex items-center gap-2 text-sm cursor-pointer"
+              >
+                <input id="downloadImagesInp" type="checkbox" class="rounded" />
+                <span>تحميل الصور ورفع Cloudinary أثناء السحب (أبطأ — اتركه غير مفعّل للسرعة)</span>
+              </label>
+            </div>
+            <div id="scrapeProgressWrap" class="hidden mt-4">
+              <div class="flex justify-between items-center text-xs font-extrabold mb-1.5 gap-2">
+                <span id="scrapeProgressMsg" class="truncate text-slate-600 dark:text-slate-300">جاري السحب...</span>
+                <span id="scrapeProgressPct" class="shrink-0 text-emerald-600 dark:text-emerald-400 tabular-nums">1%</span>
+              </div>
+              <div class="h-2.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                <div
+                  id="scrapeProgressBar"
+                  class="h-full bg-gradient-to-l from-emerald-500 to-teal-400 transition-[width] duration-100 ease-linear rounded-full"
+                  style="width: 1%"
+                ></div>
+              </div>
+            </div>
+            <div class="mt-2">
+              <button id="scrapeBtn" class="btn-primary-analyze px-5 py-2 rounded-xl" type="button">بدء السحب</button>
+              <button id="scrapeUniversalBtn" class="hidden px-5 py-2 rounded-xl border border-slate-300 dark:border-slate-600 ms-2" type="button">
+                سحب عام (متعدد المواقع)
+              </button>
+              <button id="downloadCsvBtn" class="px-5 py-2 rounded-xl border border-slate-300 dark:border-slate-600 ms-2" type="button">تحميل CSV</button>
+              <button id="downloadXlsxBtn" class="px-5 py-2 rounded-xl border border-slate-300 dark:border-slate-600 ms-2" type="button">تحميل Excel</button>
+              <button id="downloadSallaBtn" class="px-5 py-2 rounded-xl border border-slate-300 dark:border-slate-600 ms-2" type="button">تحميل Excel سلة</button>
+            </div>
+            <p id="metaInfo" class="text-xs mt-3 text-slate-500 dark:text-slate-400"></p>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl p-5">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <div>
+                <h2 class="text-base font-extrabold">محفوظ في النظام</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  يُحفظ تلقائياً بعد كل سحب ناجح؛ استرجع الجدول والبيانات في أي وقت دون تحميل ملف.
+                </p>
+              </div>
+              <button type="button" id="refreshSessionsBtn" class="text-sm font-extrabold px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-600">
+                تحديث القائمة
+              </button>
+            </div>
+            <p id="savedSessionsErr" class="text-sm text-amber-600 dark:text-amber-400 hidden"></p>
+            <div id="savedSessionsEmpty" class="text-sm text-slate-500 dark:text-slate-400 py-4 hidden">
+              لا توجد جلسات محفوظة بعد. نفّذ سحباً ناجحاً ليُحفظ تلقائياً هنا.
+            </div>
+            <div class="overflow-x-auto">
+              <table class="min-w-full text-sm" id="savedSessionsTableWrap">
+                <thead>
+                  <tr class="border-b border-slate-200 dark:border-slate-700">
+                    <th class="p-2 text-start">الوصف</th>
+                    <th class="p-2 text-start">التاريخ</th>
+                    <th class="p-2 text-start">عدد المنتجات</th>
+                    <th class="p-2 text-start">إجراءات</th>
+                  </tr>
+                </thead>
+                <tbody id="savedSessionsRows"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl p-3 overflow-auto">
+            <table class="min-w-full text-sm">
+              <thead>
+                <tr class="border-b border-slate-200 dark:border-slate-700">
+                  <th class="p-2">الصورة</th>
+                  <th class="p-2">الاسم الأصلي</th>
+                  <th class="p-2">الاسم المحسن</th>
+                  <th class="p-2">الماركة</th>
+                  <th class="p-2">الموديل</th>
+                  <th class="p-2">المقاس</th>
+                  <th class="p-2">السعر</th>
+                  <th class="p-2">سنة الصنع</th>
+                  <th class="p-2">حالة الصورة</th>
+                  <th class="p-2">حالة SEO</th>
+                </tr>
+              </thead>
+              <tbody id="previewRows"></tbody>
+            </table>
+          </div>
+        </div>
+      
+      </main>
+    </div>
+
+    <script src="/static/app.js?v=19"></script>
+    <script>
+      (function () {
+        var fsBtn = document.getElementById("opFullscreenBtn");
+        if (fsBtn) {
+          fsBtn.addEventListener("click", function () {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+            else document.exitFullscreen?.();
+          });
+        }
+        var backBtn = document.getElementById("opBackBtn");
+        if (backBtn) {
+          backBtn.addEventListener("click", function () {
+            if (window.history.length > 1) window.history.back();
+            else window.location.href = "/";
+          });
+        }
+        var opLogoutBtn = document.getElementById("opLogoutBtn");
+        if (opLogoutBtn) {
+          opLogoutBtn.addEventListener("click", async function () {
+            try { await apiPostJson("/auth/logout", {}); } catch (e) {}
+            window.location.href = "/login";
+          });
+        }
+        (async function () {
+          try {
+            const res = await fetch("/auth/me", { credentials: "same-origin" });
+            if (!res.ok) return;
+            const me = await res.json();
+            const nameEl = document.getElementById("opProfileName");
+            const roleEl = document.getElementById("opProfileRole");
+            const avatarEl = document.getElementById("opAvatarInitial");
+            if (me && me.username) {
+              if (nameEl) nameEl.textContent = me.username;
+              if (avatarEl) avatarEl.textContent = me.username.trim().charAt(0).toUpperCase() || "؟";
+              if (roleEl) roleEl.textContent = me.is_admin ? "مدير النظام" : (me.role_name === "admin" ? "مدير النظام" : "مستخدم النظام");
+            }
+          } catch (e) {}
+        })();
+      })();
+      
+      initAuthUI();
+      const rows = document.getElementById("previewRows");
+      const metaInfo = document.getElementById("metaInfo");
+      const btn = document.getElementById("scrapeBtn");
+      const csvBtn = document.getElementById("downloadCsvBtn");
+      const xlsxBtn = document.getElementById("downloadXlsxBtn");
+      const sallaBtn = document.getElementById("downloadSallaBtn");
+      const scrapeUniversalBtn = document.getElementById("scrapeUniversalBtn");
+      const importModeInp = document.getElementById("importModeInp");
+      const urlInp = document.getElementById("siteUrl");
+      const siteUrlLabel = document.getElementById("siteUrlLabel");
+      const siteUrlHelp = document.getElementById("siteUrlHelp");
+      const siteKeyInp = document.getElementById("siteKeyInp");
+      const siteKeyHint = document.getElementById("siteKeyHint");
+      const brandInp = document.getElementById("brandInp");
+      const sizeInp = document.getElementById("sizeInp");
+      const limitInp = document.getElementById("limitInp");
+      const maxPagesInp = document.getElementById("maxPagesInp");
+      const pageMode = document.getElementById("pageMode");
+      const downloadImagesWrap = document.getElementById("downloadImagesWrap");
+      const downloadImagesInp = document.getElementById("downloadImagesInp");
+      const scrapeProgressWrap = document.getElementById("scrapeProgressWrap");
+      const scrapeProgressMsg = document.getElementById("scrapeProgressMsg");
+      const scrapeProgressPct = document.getElementById("scrapeProgressPct");
+      const scrapeProgressBar = document.getElementById("scrapeProgressBar");
+      let restoredSessionId = "";
+
+      function setScrapeProgress(visible, pct, msg) {
+        scrapeProgressWrap.classList.toggle("hidden", !visible);
+        const p = Math.max(1, Math.min(100, Number(pct) || 1));
+        scrapeProgressPct.textContent = p + "%";
+        scrapeProgressBar.style.width = p + "%";
+        if (msg) scrapeProgressMsg.textContent = msg;
+      }
+
+      function esc(s) {
+        return String(s || "").replace(/[&<>"']/g, function (m) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m];
+        });
+      }
+
+      function previewCellHtml(x) {
+        const status = String(x.image_status || x.cloudinary_status || "").trim();
+        let src = String(x.image_preview || "").trim();
+        const cloud = String(x.image_cloudinary || "").trim();
+        const remote = String(x.source_image_url || x.image_url || "").trim();
+        if (!src && cloud.startsWith("https://res.cloudinary.com/")) {
+          src = cloud;
+        }
+        if (!src && remote.startsWith("http")) {
+          src = remote;
+        }
+        if (!src) {
+          return '<td class="p-2 text-xs text-slate-500">' + esc(status || "—") + "</td>";
+        }
+        const failLabel = esc(status || "فشل تحميل الصورة");
+        return (
+          '<td class="p-2">' +
+          '<img class="preview-img" src="' +
+          esc(src) +
+          '" alt="" loading="lazy" referrerpolicy="no-referrer" ' +
+          'onerror="this.onerror=null;this.outerHTML=\'<span class=\\\'text-xs text-amber-600\\\'>' +
+          failLabel +
+          "</span>';\" />" +
+          "</td>"
+        );
+      }
+
+      function render(items) {
+        rows.innerHTML = "";
+        items.forEach(function (x) {
+          const originalName = x.name || x.title || "";
+          const seoName = x.product_title || x.title || x.name || "";
+          const model = x.model || x.description || "";
+          const size = x.size || "";
+          const year = x.year || "";
+          const tr = document.createElement("tr");
+          tr.className = "border-b border-slate-100 dark:border-slate-800";
+          tr.innerHTML =
+            previewCellHtml(x) +
+            '<td class="p-2">' +
+            esc(originalName) +
+            "</td>" +
+            '<td class="p-2">' +
+            esc(seoName) +
+            "</td>" +
+            '<td class="p-2">' +
+            esc(x.brand) +
+            "</td>" +
+            '<td class="p-2">' +
+            esc(model) +
+            "</td>" +
+            '<td class="p-2">' +
+            esc(size) +
+            "</td>" +
+            '<td class="p-2">' +
+            esc(x.price) +
+            "</td>" +
+            '<td class="p-2">' +
+            esc(year) +
+            "</td>" +
+            '<td class="p-2">' +
+            esc(x.image_status || "") +
+            "</td>" +
+            '<td class="p-2">' +
+            esc(x.seo_status || "") +
+            "</td>";
+          rows.appendChild(tr);
+        });
+      }
+
+      function parseBoundedInt(value, fallback, minValue, maxValue) {
+        let n = Math.floor(Number(value));
+        if (!Number.isFinite(n) || n < minValue) n = fallback;
+        else if (n > maxValue) n = maxValue;
+        return n;
+      }
+
+      function pollImporterJob(jobId) {
+        const pollMs = 400;
+        let settled = false;
+        let pollTimer = null;
+        return new Promise(function (resolve, reject) {
+          const stop = function () {
+            if (pollTimer) clearInterval(pollTimer);
+            pollTimer = null;
+          };
+          const tick = async function () {
+            if (settled) return;
+            try {
+              const st = await fetch("/importer/scrape/job/" + encodeURIComponent(jobId), {
+                credentials: "include",
+                headers: { Accept: "application/json" },
+              });
+              if (st.status === 404) {
+                settled = true;
+                stop();
+                reject(
+                  new Error(
+                    "انقطعت مهمة السحب (غالباً السيرفر نام أو نشر جديد). أعد المحاولة بعد Deploy على lghe."
+                  )
+                );
+                return;
+              }
+              if (!st.ok) {
+                settled = true;
+                stop();
+                reject(new Error(await readErrorMessage(st)));
+                return;
+              }
+              const j = await st.json();
+              const prog = Number(j.progress) || 1;
+              setScrapeProgress(true, prog, j.message || "جاري السحب...");
+              if (j.status === "error") {
+                settled = true;
+                stop();
+                reject(new Error(j.error || j.message || "فشل السحب"));
+                return;
+              }
+              if (j.done && j.status === "done") {
+                settled = true;
+                stop();
+                resolve(j.result || {});
+                return;
+              }
+            } catch (err) {
+              if (!settled) {
+                settled = true;
+                stop();
+                reject(err);
+              }
+            }
+          };
+          pollTimer = setInterval(tick, pollMs);
+          tick();
+        });
+      }
+
+      function syncImportModeUI() {
+        const mode = importModeInp.value;
+        const isClassic = mode === "classic";
+        const isDeepScan = mode === "brand-deep-scan";
+
+        sizeInp.disabled = !isClassic;
+        pageMode.disabled = !isClassic;
+        urlInp.disabled = false;
+        if (downloadImagesWrap) {
+          downloadImagesWrap.classList.toggle("hidden", isClassic);
+        }
+
+        const siteKey = (siteKeyInp.value || "").trim();
+        const needsUniversal = siteKey && siteKey !== "tireex";
+        if (needsUniversal && isClassic) {
+          importModeInp.value = "universal-category";
+          return syncImportModeUI();
+        }
+
+        if (siteKeyHint) {
+        if (siteKey === "almurad") {
+          siteKeyHint.textContent =
+            "المراد: الصق رابط الفئة — اترك خانة الماركة فارغة للجنوط. limit=0 و max_pages≥15. استخدم audit-system-2-lghe وليس wm76.";
+          siteKeyHint.classList.remove("hidden");
+        } else if (siteKey === "brwx") {
+          siteKeyHint.textContent =
+            "برومكس (WooCommerce): الصق رابط من brwx.com — مثل https://brwx.com/product-category/almurad-tires";
+          siteKeyHint.classList.remove("hidden");
+        } else if (needsUniversal && !isClassic) {
+            siteKeyHint.textContent = "السحب من: " + siteKey;
+            siteKeyHint.classList.remove("hidden");
+          } else {
+            siteKeyHint.classList.add("hidden");
+            siteKeyHint.textContent = "";
+          }
+        }
+
+        if (isClassic) {
+          siteUrlLabel.textContent = "رابط صفحة الماركة أو نتائج البحث";
+          siteUrlHelp.textContent = "هذا هو وضع Tireex الحالي داخل النظام. يمكنك فلترة النتائج بالمقاس والصفحات.";
+          urlInp.placeholder = "أدخل رابط صفحة الماركة أو نتائج البحث";
+          brandInp.placeholder = "اسم الماركة اختياري لتضييق النتائج";
+          btn.textContent = "سحب المنتجات";
+        } else if (isDeepScan) {
+          siteUrlLabel.textContent = "رابط تصنيف الماركة (اختياري)";
+          siteUrlHelp.textContent =
+            "اكتب اسم الماركة (مطلوب). يمكنك إضافة رابط صفحة الماركة على كفرات بلس لتسريع السحب، مثل صفحة Accelera.";
+          urlInp.placeholder = "اختياري: https://kafaratplus.com/...";
+          brandInp.placeholder = "اسم الماركة مطلوب، مثال: Accelera";
+          btn.textContent = "بدء Brand Deep Scan";
+        } else {
+          siteUrlLabel.textContent = "رابط التصنيف";
+          siteUrlHelp.textContent = "اختر الموقع ثم أدخل رابط التصنيف. خانة الماركة اختيارية لتصفية النتائج بعد السحب.";
+          urlInp.placeholder = "أدخل رابط التصنيف الكامل";
+          brandInp.placeholder = "اسم الماركة اختياري لتصفية النتائج";
+          btn.textContent = "سحب من رابط التصنيف";
+        }
+      }
+
+      async function runClassicImport() {
+        const site_url = (urlInp.value || "").trim();
+        const brand = (brandInp.value || "").trim();
+        const size = (sizeInp.value || "").trim();
+        const limit = parseBoundedInt(limitInp.value, 0, 0, 500000);
+        const max_pages = parseBoundedInt(maxPagesInp.value, 500, 1, 5000);
+        const multi_pages = pageMode.value === "multi";
+        if (!site_url) {
+          showToast("أدخل رابط صفحة الماركة أو البحث", "#ef4444");
+          return;
+        }
+        setLoading(btn, true, "جارٍ السحب...");
+        setScrapeProgress(true, 1, "بدء السحب...");
+        try {
+          syncCsrfFromCookie();
+          const csrf = localStorage.getItem("csrf_token") || "";
+          const startRes = await fetch("/importer/scrape/start", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json", Accept: "application/json", "X-CSRF-Token": csrf },
+            body: JSON.stringify({ site_url, brand, size, limit, max_pages, multi_pages }),
+          });
+          if (!startRes.ok) throw new Error(await readErrorMessage(startRes));
+          const startData = await startRes.json();
+          const jobId = startData.job_id;
+          if (!jobId) throw new Error("لم يُرجع الخادم معرف المهمة");
+          const data = await pollImporterJob(jobId);
+          setScrapeProgress(true, 100, "تم");
+          restoredSessionId = "";
+          render(data.items || []);
+          metaInfo.textContent =
+            "في الملف: " +
+            (data.count || 0) +
+            " منتج — من الموقع (خام): " +
+            (data.scraped_count != null ? data.scraped_count : "؟") +
+            " — بعد الفلترة/الحد: " +
+            (data.after_filter_count != null ? data.after_filter_count : "؟") +
+            " — الحد المُرسل: " +
+            (data.import_limit != null ? data.import_limit : "؟") +
+            " (0 = بدون حد) — CSV: " +
+            (data.csv_path || "") +
+            " — XLSX: " +
+            (data.xlsx_path || "") +
+            " — Salla XLSX: " +
+            (data.salla_xlsx_path || "");
+          showToast("تم سحب المنتجات بنجاح", "#10b981");
+          refreshSavedSessions();
+        } catch (e) {
+          showToast(e.message || "فشل سحب المنتجات", "#ef4444");
+        } finally {
+          setLoading(btn, false, "سحب المنتجات");
+          setTimeout(function () {
+            setScrapeProgress(false, 1, "");
+          }, 600);
+        }
+      }
+
+      async function runUniversalImport(mode) {
+        const site_key = (siteKeyInp.value || "").trim();
+        const brand = (brandInp.value || "").trim();
+        const max_pages = parseBoundedInt(maxPagesInp.value, 500, 1, 5000);
+        const limit = parseBoundedInt(limitInp.value, 0, 0, 500000);
+        const isDeepScan = mode === "brand-deep-scan";
+        const category_url = isDeepScan ? "deep-scan" : (urlInp.value || "").trim();
+        if (!site_key) {
+          showToast("اختر الموقع أولاً", "#ef4444");
+          return;
+        }
+        if (!isDeepScan && !category_url) {
+          showToast("أدخل رابط التصنيف", "#ef4444");
+          return;
+        }
+        if (isDeepScan && !brand) {
+          showToast("Brand Deep Scan: اكتب اسم الماركة في خانة الماركة (مثل Accelera)", "#ef4444");
+          return;
+        }
+        if (site_key === "almurad" && brand && !isDeepScan) {
+          showToast("للجنوط: اترك خانة الماركة فارغة وإلا قد لا يظهر أي منتج", "#f59e0b");
+        }
+        setLoading(btn, true, isDeepScan ? "جارٍ Deep Scan..." : "جارٍ السحب...");
+        setScrapeProgress(
+          true,
+          2,
+          isDeepScan
+            ? "بدء Brand Deep Scan..."
+            : "بدء السحب — قد يستغرق عدة دقائق لعشرات المنتجات، انتظر تحديث النسبة..."
+        );
+        try {
+          syncCsrfFromCookie();
+          const csrf = localStorage.getItem("csrf_token") || "";
+          const body = {
+            site_key,
+            category_url,
+            brand,
+            listing_url: isDeepScan ? (urlInp.value || "").trim() : "",
+            max_pages,
+            limit,
+            download_images: !!(downloadImagesInp && downloadImagesInp.checked),
+          };
+          let startRes = await fetch("/importer/universal/scrape/start", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json", Accept: "application/json", "X-CSRF-Token": csrf },
+            body: JSON.stringify(body),
+          });
+          if (startRes.status === 404) {
+            showToast("السيرفر قديم — انشر آخر تحديث على lghe (يحتاج /universal/scrape/start)", "#ef4444");
+            throw new Error("واجهة السحب غير محدّثة على هذا السيرفر (404). استخدم audit-system-2-lghe بعد Deploy.");
+          }
+          if (!startRes.ok) throw new Error(await readErrorMessage(startRes));
+          const startData = await startRes.json();
+          const jobId = startData.job_id;
+          if (!jobId) throw new Error("لم يُرجع الخادم معرف المهمة");
+          const data = await pollImporterJob(jobId);
+          setScrapeProgress(true, 100, "تم");
+          restoredSessionId = data.snapshot_id || "";
+          render(data.items || []);
+          const rawN = data.raw_scraped_count != null ? data.raw_scraped_count : "?";
+          metaInfo.textContent =
+            (data.mode === "brand_deep_scan" ? "[Brand Deep Scan] " : "") +
+            (data.mode === "brand_deep_scan" ? "تم فحص الماركة: " : "تم السحب: ") +
+            (data.count || 0) +
+            " في الجدول — من الموقع: " +
+            rawN +
+            (data.hint ? " — " + data.hint : "") +
+            " — CSV: " +
+            (data.csv_path || "") +
+            (restoredSessionId ? " — Session: " + restoredSessionId : "");
+          if ((data.count || 0) === 0) {
+            showToast(data.hint || "لم يُسحب أي منتج — افرغ خانة الماركة أو تحقق من الرابط", "#ef4444");
+          } else {
+            showToast(
+              data.mode === "brand_deep_scan" ? "تم Brand Deep Scan بنجاح" : "تم السحب بنجاح",
+              "#10b981"
+            );
+          }
+          refreshSavedSessions();
+        } catch (e) {
+          showToast(e.message || "فشل السحب", "#ef4444");
+        } finally {
+          setLoading(btn, false, btn.textContent);
+          setTimeout(function () {
+            setScrapeProgress(false, 1, "");
+          }, 600);
+        }
+      }
+
+      btn.addEventListener("click", async function () {
+        const mode = importModeInp.value;
+        if (mode === "classic") {
+          await runClassicImport();
+          return;
+        }
+        await runUniversalImport(mode);
+      });
+
+      scrapeUniversalBtn.addEventListener("click", async function () {
+        await runUniversalImport("universal-category");
+      });
+
+      importModeInp.addEventListener("change", syncImportModeUI);
+      siteKeyInp.addEventListener("change", syncImportModeUI);
+      syncImportModeUI();
+
+      csvBtn.addEventListener("click", function () {
+        if (restoredSessionId) {
+          window.location.href = "/importer/sessions/" + encodeURIComponent(restoredSessionId) + "/csv";
+          return;
+        }
+        window.location.href = "/importer/csv";
+      });
+      xlsxBtn.addEventListener("click", function () {
+        if (restoredSessionId) {
+          window.location.href = "/importer/sessions/" + encodeURIComponent(restoredSessionId) + "/xlsx";
+          return;
+        }
+        window.location.href = "/importer/xlsx";
+      });
+      sallaBtn.addEventListener("click", function () {
+        if (restoredSessionId) {
+          window.location.href = "/importer/sessions/" + encodeURIComponent(restoredSessionId) + "/salla-xlsx";
+          return;
+        }
+        window.location.href = "/importer/salla-xlsx";
+      });
+
+      const savedSessionsRows = document.getElementById("savedSessionsRows");
+      const savedSessionsEmpty = document.getElementById("savedSessionsEmpty");
+      const savedSessionsErr = document.getElementById("savedSessionsErr");
+      const refreshSessionsBtn = document.getElementById("refreshSessionsBtn");
+
+      function showSavedSessionsError(msg) {
+        if (!msg) {
+          savedSessionsErr.classList.add("hidden");
+          savedSessionsErr.textContent = "";
+          return;
+        }
+        savedSessionsErr.textContent = msg;
+        savedSessionsErr.classList.remove("hidden");
+      }
+
+      function formatSessionDate(iso) {
+        if (!iso) return "—";
+        try {
+          const d = new Date(iso);
+          if (isNaN(d.getTime())) return iso;
+          return d.toLocaleString("ar-SA", { dateStyle: "short", timeStyle: "short" });
+        } catch (e) {
+          return iso;
+        }
+      }
+
+      async function refreshSavedSessions() {
+        showSavedSessionsError("");
+        savedSessionsRows.innerHTML = "";
+        try {
+          const data = await apiGet("/importer/sessions?limit=40");
+          const sessions = (data && data.sessions) || [];
+          if (!sessions.length) {
+            savedSessionsEmpty.classList.remove("hidden");
+            return;
+          }
+          savedSessionsEmpty.classList.add("hidden");
+          sessions.forEach(function (s) {
+            const tr = document.createElement("tr");
+            tr.className = "border-b border-slate-100 dark:border-slate-800 align-top";
+            const label = esc(s.label || s.id);
+            const when = esc(formatSessionDate(s.created_at));
+            const cnt = esc(String(s.count != null ? s.count : "0"));
+            const id = encodeURIComponent(s.id);
+            tr.innerHTML =
+              '<td class="p-2 max-w-md">' +
+              "<div class=\"font-bold\">" +
+              label +
+              "</div>" +
+              (s.url_preview
+                ? '<div class="text-xs text-slate-500 dark:text-slate-400 mt-1 break-all">' + esc(s.url_preview) + "</div>"
+                : "") +
+              "</td>" +
+              '<td class="p-2 whitespace-nowrap">' +
+              when +
+              "</td>" +
+              '<td class="p-2 tabular-nums">' +
+              cnt +
+              "</td>" +
+              '<td class="p-2 whitespace-nowrap">' +
+              '<button type="button" class="session-restore px-2 py-1 rounded-lg bg-emerald-600 text-white text-xs font-extrabold" data-sid="' +
+              id +
+              '">استرجاع</button> ' +
+              '<button type="button" class="session-del px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-600 text-xs font-extrabold" data-sid="' +
+              id +
+              '">حذف</button>' +
+              "</td>";
+            savedSessionsRows.appendChild(tr);
+          });
+          savedSessionsRows.querySelectorAll(".session-restore").forEach(function (btn) {
+            btn.addEventListener("click", async function () {
+              const sid = decodeURIComponent(btn.getAttribute("data-sid") || "");
+              if (!sid) return;
+              try {
+                const row = await apiGet("/importer/sessions/" + encodeURIComponent(sid));
+                const res = (row && row.result_json) || {};
+                const items = res.items || [];
+                restoredSessionId = sid;
+                render(items);
+                metaInfo.textContent =
+                  "استرجاع من النظام — " +
+                  (row.label || sid) +
+                  " — " +
+                  (res.count != null ? res.count : items.length) +
+                  " منتج" +
+                  " — يمكنك الآن تحميل CSV / Excel / Excel سلة لهذه الجلسة";
+                showToast("تم الاسترجاع. أزرار التحميل أصبحت مرتبطة بهذه الجلسة", "#10b981");
+              } catch (e) {
+                showToast(e.message || "تعذر الاسترجاع", "#ef4444");
+              }
+            });
+          });
+          savedSessionsRows.querySelectorAll(".session-del").forEach(function (btn) {
+            btn.addEventListener("click", async function () {
+              const sid = decodeURIComponent(btn.getAttribute("data-sid") || "");
+              if (!sid) return;
+              if (!confirm("حذف هذه الجلسة من النظام؟")) return;
+              try {
+                syncCsrfFromCookie();
+                await apiDelete("/importer/sessions/" + encodeURIComponent(sid));
+                if (restoredSessionId === sid) restoredSessionId = "";
+                showToast("تم الحذف", "#10b981");
+                refreshSavedSessions();
+              } catch (e) {
+                showToast(e.message || "تعذر الحذف", "#ef4444");
+              }
+            });
+          });
+        } catch (e) {
+          savedSessionsEmpty.classList.add("hidden");
+          showSavedSessionsError(e.message || "تعذر تحميل الجلسات. تأكد من تسجيل الدخول.");
+        }
+      }
+
+      refreshSessionsBtn.addEventListener("click", function () {
+        refreshSavedSessions();
+      });
+
+      refreshSavedSessions();
+    
+    </script>
+  </body>
+</html>

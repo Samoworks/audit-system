@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("auditflow-theme");
+          var d = t === "light" ? false : true;
+          document.documentElement.classList.toggle("dark", d);
+        } catch (e) {}
+      })();
+    </script>
+    <title>لوحة التحكم — OptimalSuite AI</title>
+    <link rel="stylesheet" href="/static/tailwind.css?v=9" />
+    <link rel="stylesheet" href="/static/dark.css?v=9" />
+    <link rel="stylesheet" href="/static/admin_layout.css?v=1" />
+    <link rel="icon" href="/static/favicon.svg?v=9" />
+  </head>
+  <body class="admin2-shell" data-admin-active="dashboard" data-admin-title="لوحة التحكم">
+    <div id="toast" class="hidden toast-host text-white px-4 py-3 rounded-xl font-extrabold text-sm"></div>
+    <div id="adminLayoutHost"></div>
+
+    <main id="adminContent" class="admin2-content">
+      <div class="a2-grid a2-grid-4" id="dashStatsGrid" style="margin-bottom:1.25rem;">
+        <div class="a2-card">
+          <div class="a2-stat-label">إجمالي المستخدمين</div>
+          <div class="a2-stat-value" id="sumUsers2">—</div>
+        </div>
+        <div class="a2-card">
+          <div class="a2-stat-label">اشتراكات مدفوعة نشطة</div>
+          <div class="a2-stat-value" id="sumPaid2">—</div>
+        </div>
+        <div class="a2-card">
+          <div class="a2-stat-label">دعوات فعّالة</div>
+          <div class="a2-stat-value" id="sumInvites2">—</div>
+        </div>
+        <div class="a2-card">
+          <div class="a2-stat-label">اشتراكات تنتهي خلال 7 أيام</div>
+          <div class="a2-stat-value" id="sumExpiring2">—</div>
+        </div>
+      </div>
+
+      <div class="a2-grid a2-grid-2" style="margin-bottom:1.25rem; align-items:start;">
+        <div class="a2-card">
+          <h2 class="a2-card-title">نشاط آخر 30 يوماً</h2>
+          <div id="adminChartHost" style="overflow-x:auto;"></div>
+          <div style="display:flex; gap:1rem; margin-top:0.75rem; font-size:0.75rem; font-weight:700; color:var(--a2-text-muted);">
+            <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#4fa3f7;margin-inline-end:4px;"></span>مستخدمون جدد</span>
+            <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#3fcf8e;margin-inline-end:4px;"></span>اشتراكات مدفوعة جديدة</span>
+          </div>
+        </div>
+        <div class="a2-card">
+          <h2 class="a2-card-title">التنبيهات</h2>
+          <div id="adminAlertsHost" class="a2-grid" style="gap:0.5rem;"></div>
+        </div>
+      </div>
+
+      <div class="a2-grid a2-grid-2" style="margin-bottom:1.25rem; align-items:start;">
+        <div class="a2-card">
+          <h2 class="a2-card-title">آخر 5 نشاطات</h2>
+          <div id="recentActivityHost" class="a2-grid" style="gap:0.5rem;"></div>
+        </div>
+        <div class="a2-card">
+          <h2 class="a2-card-title">اختصارات سريعة</h2>
+          <div class="a2-grid a2-grid-2" style="gap:0.6rem;">
+            <a href="/admin/users" class="a2-btn a2-btn-outline">👥 المستخدمون</a>
+            <a href="/admin/subscriptions" class="a2-btn a2-btn-outline">💳 الاشتراكات</a>
+            <a href="/admin/invites" class="a2-btn a2-btn-outline">🎟️ إنشاء دعوة</a>
+            <a href="/admin/backups" class="a2-btn a2-btn-outline">💾 نسخة احتياطية</a>
+            <a href="/admin/security" class="a2-btn a2-btn-outline">🔐 الأمان</a>
+            <a href="/admin/activity" class="a2-btn a2-btn-outline">📝 سجل النشاط</a>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="/static/app.js?v=19"></script>
+    <script src="/static/admin_layout.js?v=1"></script>
+    <script>
+      function fmtActivityDT(v) {
+        if (!v) return "-";
+        try { return new Date(v).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" }); } catch (e) { return "-"; }
+      }
+
+      function renderAdminChart(chart) {
+        const host = document.getElementById("adminChartHost");
+        if (!host || !chart) return;
+        const labels = chart.labels || [];
+        const a = chart.new_users || [];
+        const b = chart.new_paid || [];
+        const w = Math.max(560, labels.length * 22);
+        const h = 180;
+        const padL = 30, padB = 20, padT = 10;
+        const maxV = Math.max(1, ...a, ...b);
+        const stepX = (w - padL - 10) / Math.max(1, labels.length - 1);
+        const scaleY = (h - padT - padB) / maxV;
+        function pathFor(series) {
+          return series
+            .map((v, i) => `${i === 0 ? "M" : "L"}${(padL + i * stepX).toFixed(1)},${(h - padB - v * scaleY).toFixed(1)}`)
+            .join(" ");
+        }
+        const gridLines = [0, 0.25, 0.5, 0.75, 1]
+          .map((f) => {
+            const y = (h - padB - f * (h - padT - padB)).toFixed(1);
+            return `<line x1="${padL}" y1="${y}" x2="${w - 5}" y2="${y}" stroke="currentColor" stroke-opacity="0.08" />`;
+          })
+          .join("");
+        host.innerHTML = `
+          <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="color:var(--a2-text-muted);">
+            ${gridLines}
+            <path d="${pathFor(a)}" fill="none" stroke="#4fa3f7" stroke-width="2" />
+            <path d="${pathFor(b)}" fill="none" stroke="#3fcf8e" stroke-width="2" />
+          </svg>
+        `;
+      }
+
+      function renderAdminAlerts(s) {
+        const host = document.getElementById("adminAlertsHost");
+        if (!host) return;
+        const alerts = [];
+        if ((s.expiring_7d || 0) > 0) {
+          alerts.push({ icon: "⏰", color: "#d97706", text: `${s.expiring_7d} اشتراك سينتهي خلال 7 أيام` });
+        }
+        if ((s.deactivated_count || 0) > 0) {
+          alerts.push({ icon: "⛔", color: "#ef4444", text: `${s.deactivated_count} مستخدم غير مفعّل` });
+        }
+        if (s.days_since_backup === null || s.days_since_backup === undefined) {
+          alerts.push({ icon: "💾", color: "#ef4444", text: "لم يتم إنشاء نسخة احتياطية بعد" });
+        } else if (s.days_since_backup >= 7) {
+          alerts.push({ icon: "💾", color: "#d97706", text: `آخر نسخة احتياطية منذ ${s.days_since_backup} يوم` });
+        }
+        if (!alerts.length) {
+          host.innerHTML = '<p class="a2-empty">لا تنبيهات حالياً ✔️</p>';
+          return;
+        }
+        host.innerHTML = alerts
+          .map((a) => `<div class="a2-card" style="padding:0.6rem 0.85rem; display:flex; align-items:center; gap:0.5rem;"><span>${a.icon}</span><span style="color:${a.color}; font-weight:700; font-size:0.85rem;">${a.text}</span></div>`)
+          .join("");
+      }
+
+      async function loadDashboard() {
+        try {
+          const s = await apiGet("/admin/summary");
+          document.getElementById("sumUsers2").textContent = String(s.total_users || 0);
+          document.getElementById("sumPaid2").textContent = String(s.paid_active || 0);
+          document.getElementById("sumInvites2").textContent = String(s.invite_active || 0);
+          document.getElementById("sumExpiring2").textContent = String(s.expiring_7d || 0);
+          renderAdminChart(s.chart);
+          renderAdminAlerts(s);
+        } catch (e) {
+          showToast(e.message || "تعذّر تحميل لوحة التحكم", "#ef4444");
+        }
+
+        const activityHost = document.getElementById("recentActivityHost");
+        try {
+          const data = await apiGet("/admin/audit?limit=5");
+          const items = data.items || [];
+          if (!items.length) {
+            activityHost.innerHTML = '<p class="a2-empty">لا نشاطات بعد.</p>';
+          } else {
+            activityHost.innerHTML = items
+              .map((row) => `
+                <div class="a2-card" style="padding:0.6rem 0.85rem;">
+                  <div style="font-weight:800; font-size:0.85rem;">${row.action}</div>
+                  <div style="font-size:0.72rem; color:var(--a2-text-muted); margin-top:2px;" dir="ltr">${fmtActivityDT(row.created_at)}</div>
+                </div>`)
+              .join("");
+          }
+        } catch (e) {
+          activityHost.innerHTML = `<p class="a2-empty">${e.message || "تعذّر تحميل سجل النشاط"}</p>`;
+        }
+      }
+
+      loadDashboard();
+    </script>
+  </body>
+</html>

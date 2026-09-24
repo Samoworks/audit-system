@@ -128,10 +128,28 @@ async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 
-BASE_DIR = Path(__file__).resolve().parents[2]
+# مسار جذر المشروع: على Render يتم نشر الريبو الكامل، فالصعود بمقدار مستويين من
+# app/main.py يوصل إلى مجلد auditflow الذي يجاور فيه backend مجلد frontend.
+# لكن على Vercel يتم "تسطيح" حزمة الدالة لتصبح مطابقة تمامًا لـ rootDirectory
+# المُهيّأ (auditflow/backend) — أي أن auditflow/frontend لا يكون موجودًا إطلاقًا
+# داخل حزمة النشر (هذا ما تسبب سابقًا بفشل StaticFiles لأن المجلد غير موجود).
+# بدل الاعتماد على عدد ثابت من المستويات (parents[N]) وهو هش بين المنصتين،
+# نبحث عن أول مسار "frontend" موجود فعليًا من عدة مرشحين:
+#   1) backend/frontend  — نسخة من الواجهة الأمامية داخل backend نفسه، لضمان
+#      وجودها فعليًا داخل حزمة Vercel المنشورة (rootDirectory = auditflow/backend).
+#   2) ../frontend (بجانب backend) — المسار الأصلي على Render حيث الريبو كامل.
+_APP_DIR = Path(__file__).resolve().parent   # .../backend/app
+_BACKEND_DIR = _APP_DIR.parent               # .../backend
+BASE_DIR = _BACKEND_DIR.parent               # .../auditflow (قد لا يحتوي frontend على Vercel)
+
+_frontend_candidates = [
+    _BACKEND_DIR / "frontend",
+    BASE_DIR / "frontend",
+]
+FRONTEND_DIR = next((p for p in _frontend_candidates if p.is_dir()), _frontend_candidates[0])
+
 _data_root = (os.getenv("AUDITFLOW_DATA_ROOT") or "").strip()
 UPLOAD_DIR = (Path(_data_root) / "uploads") if _data_root else (BASE_DIR / "uploads")
-FRONTEND_DIR = BASE_DIR / "frontend"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 (UPLOAD_DIR / "products").mkdir(parents=True, exist_ok=True)
 
