@@ -152,6 +152,50 @@ app.include_router(importer_router)
 init_db()
 
 
+def _recover_admin_access() -> None:
+    """
+    استعادة طوارئ لحساب الأدمن.
+    لو متغير البيئة AUDITFLOW_RECOVER_ADMIN_PASSWORD موجود:
+    - يعيّن كلمة المرور دي لكل حسابات الأدمن (أو لأول مستخدم لو مفيش أدمن)
+    - يفك القفل ويفعّل الحساب
+    - يطبع أسماء المستخدمين في الـ Logs
+    امسح المتغير من Render بعد ما تدخل.
+    """
+    new_pw = (os.getenv("AUDITFLOW_RECOVER_ADMIN_PASSWORD") or "").strip()
+    if not new_pw:
+        return
+    log = logging.getLogger("uvicorn.error")
+    from .auth_core import hash_password
+
+    db = _SessionLocal()
+    try:
+        admins = db.query(User).filter(User.is_admin == 1).all()
+        if not admins:
+            first = db.query(User).order_by(User.created_at.asc(), User.id.asc()).first()
+            if first:
+                first.is_admin = 1
+                first.role_name = "admin"
+                admins = [first]
+        for u in admins:
+            u.password_hash = hash_password(new_pw)
+            u.is_active = 1
+            if hasattr(u, "failed_attempts"):
+                u.failed_attempts = 0
+            if hasattr(u, "locked_until"):
+                u.locked_until = None
+        db.commit()
+        names = ", ".join(f"{u.username} <{u.email}>" for u in admins) or "(no users in database)"
+        log.warning("ADMIN RECOVERY: password reset for: %s", names)
+    except Exception:
+        db.rollback()
+        log.exception("ADMIN RECOVERY failed")
+    finally:
+        db.close()
+
+
+_recover_admin_access()
+
+
 def _wants_html(request: Request) -> bool:
     accept = request.headers.get("accept", "").lower()
     if "application/json" in accept:
