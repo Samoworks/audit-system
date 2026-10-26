@@ -23,6 +23,9 @@ if DATABASE_URL:
     # Render/PostgreSQL path
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = "postgresql://" + DATABASE_URL[len("postgres://") :]
+    # المثبّت هو psycopg2 فقط؛ أي رابط بيطلب psycopg (v3) يتحوّل لـ psycopg2
+    if DATABASE_URL.startswith("postgresql+psycopg://"):
+        DATABASE_URL = "postgresql+psycopg2://" + DATABASE_URL[len("postgresql+psycopg://") :]
     engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 else:
     # Ensure SQLite directory exists on fresh/containerized deploys (Railway/Render).
